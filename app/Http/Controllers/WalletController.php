@@ -73,7 +73,7 @@ class WalletController extends Controller
         $userWalletHistory = New UserWalletHistory;
         if(!empty($request->user_id)){
             $user_id =  $request->user_id;
-            $status = UserWalletHistory::Wallet_STATUS['approve'];
+            $status = UserWalletHistory::Wallet_STATUS['pending']; 
         }
         $userWalletHistory->user_id =  $user_id;
         $userWalletHistory->amount =  $amount;
@@ -92,44 +92,39 @@ class WalletController extends Controller
     }
 
     public function purchaseAmountDatatable(Request $request){
-
-        $data = UserWalletHistory::with('userDetails')
-                ->where('transaction_type',UserWalletHistory::Wallet_TRANSATION['purchase_amount']);
-        if($request->status !== "all"){
-            $data->where('status',$request->status);
-        }
-        if($request->payment_from){
-            $payment_from = Carbon::parse($request->payment_from);
-            $data->whereDate('created_at' , '>=' , $payment_from);
-        }
-
-        if($request->payment_to){
-            $payment_to = Carbon::parse($request->payment_to);
-            $data->whereDate('created_at' , '<=' , $payment_to);
-        }
-
-        if($request->user !== 'all'){
-            $data->where('user_id',$request->user);
-        }
-        
-        if (!empty($request->get('search'))) {
-             $data = $data->where(function($w) use($request){
-                $search = $request->get('search');
-                $w->where('id', 'LIKE', "%$search%")
-                ->orWhere('id', 'LIKE', "%$search%");
-            });
-        }
-
-       return  $this->walletService->datatableData($data);
+        $is_wallet = isset($request->is_wallet) ? $request->is_wallet :  false;
+        $data = $this->walletService->datatableDataQuery($request);
+       return  $this->walletService->datatableData($data,$is_wallet);
     }
 
     public function updatepurchaseAmount($id,$status){
         $userWalletHistory =  UserWalletHistory::find($id);
-        if($status == UserWalletHistory::Wallet_STATUS['approve']){
+        if(empty($userWalletHistory->transaction_parent_id) && $status == UserWalletHistory::Wallet_STATUS['approve']){
             $this->walletService::amountDistribute($userWalletHistory);
         }
         $userWalletHistory->status =  $status;
         $userWalletHistory->save();
+        return redirect()->back()->withSuccess('updated successfull');
+    }
+
+    public function viewPurchaseAmount($id){
+        $userWalletHistory =  UserWalletHistory::walletAmountDetails($id);
+    
+        $payments['users'] = $userWalletHistory ? $userWalletHistory[0] : [];
+        $payments['fullDetails'] = $userWalletHistory ?? [];
+        $payments['totalDistributionAmount'] = $this->walletService->purchaseAmountDistribution($userWalletHistory);
+        return view('admin_pages.wallet_purchase_amount',compact('payments'));
+    }
+
+    public function walletAmountProcess(){
+        $status =  UserWalletHistory::Wallet_STATUS;
+        $users = User::get();
+        return view('admin_pages.wallet_amount_process',compact('status','users'));
+    }
+
+    public function walletAllAmountUpdate($id,$status){
+        $userWalletHistory = UserWalletHistory::where('transaction_parent_id', $id)->update(['status' => $status]);
+
         return redirect()->back()->withSuccess('updated successfull');
     }
 }

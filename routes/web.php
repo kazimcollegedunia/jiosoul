@@ -67,7 +67,10 @@ use App\Http\Controllers\WalletController;
             Route::get('purchase-amount', [WalletController::class,'purchaseAmountList'])->name('purchase.amount.list');
             Route::get('purchase-amount-datatable', [WalletController::class,'purchaseAmountDatatable'])->name('purchase.amount.datatable');
             Route::get('update-purchase-amount/{id}/{status}', [WalletController::class,'updatepurchaseAmount'])->name('update.purchase.amount');
-            
+            Route::get('view-purchase-amount/{id}', [WalletController::class,'viewPurchaseAmount'])->name('view.purchase.amount');
+            Route::get('all-amount-update/{id}/{status}', [WalletController::class,'walletAllAmountUpdate'])->name('wallet.all.amount.update');
+            Route::get('amount-process', [WalletController::class,'walletAmountProcess'])->name('wallet.amount.process');
+            Route::get('amount-process-datatable', [WalletController::class,'amountProcessDatatable'])->name('amount.process.datatable');
         });
 
         Route::get('new-user', function(){

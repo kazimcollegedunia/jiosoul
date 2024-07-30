@@ -24,11 +24,12 @@
 
         <div class="min-height-200px" id="content">
             <div class="row pb-10">
-                <div class="col-xl-4 col-lg-4 col-md-4 mb-20">
+                <div class="col-xl-3 col-lg-3 col-md-3 mb-20">
                     <div class="card-box height-100-p widget-style3">
                         <div class="d-flex flex-wrap">
-                            <div class="widget-data">
-                                <div class="weight-700 font-24 text-dark">{{$wallet['credit']}} <i class="bi bi-currency-rupee"></i> </div>
+                            <div class="widget-data"> 
+                                <!-- dd($wallet); -->
+                                <div class="weight-700 font-24 text-dark">{{$wallet['created'] ?? 0}} <i class="bi bi-currency-rupee"></i> </div>
                                 <div class="font-14 text-secondary weight-500">
                                     Wallet Balence
                                 </div>
@@ -41,11 +42,28 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-4 col-lg-4 col-md-4 mb-20">
+                <div class="col-xl-3 col-lg-3 col-md-3 mb-20">
                     <div class="card-box height-100-p widget-style3">
                         <div class="d-flex flex-wrap">
                             <div class="widget-data">
-                                <div class="weight-700 font-24 text-dark">{{$wallet['debited']}}</div>
+                                <div class="weight-700 font-24 text-dark">{{$wallet['pending'] ?? 0 }} <i class="bi bi-currency-rupee"></i> </div>
+                                <div class="font-14 text-secondary weight-500">
+                                    Wallet Pending Balence
+                                </div>
+                            </div>
+                            <div class="widget-icon">
+                                <div class="icon" data-color="#ff5b5b">
+                                    <span class="icon-copy fa fa-money"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-3 col-md-3 mb-20">
+                    <div class="card-box height-100-p widget-style3">
+                        <div class="d-flex flex-wrap">
+                            <div class="widget-data">
+                                <div class="weight-700 font-24 text-dark">{{$wallet['debited'] ?? 0 }}</div>
                                 <div class="font-14 text-secondary weight-500">
                                     Withdraw Amount
                                 </div>
@@ -61,11 +79,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-4 col-lg-4 col-md-4 mb-20">
+                <div class="col-xl-3 col-lg-3 col-md-3 mb-20">
                     <div class="card-box height-100-p widget-style3">
                         <div class="d-flex flex-wrap">
                             <div class="widget-data">
-                                <div class="weight-700 font-24 text-dark">{{$wallet['debitReq']}}</div>
+                                <div class="weight-700 font-24 text-dark">{{$wallet['debitReq'] ?? 0 }}</div>
                                 <div class="font-14 text-secondary weight-500">
                                     Withdraw Request
                                 </div>
@@ -144,17 +162,15 @@
                         </tr>
                         </thead>
                         <tbody>
-                            @foreach ($wallet['allTransation'] as $key => $transation)
-                            <tr>
-                                <td>{{ ++$key }}</td>
-                                <td>TID{{ $transation['id'] }}</td>
-                                <td>{{ $transation['amount'] }}</td>
-                                <td>{{ $transation['transaction_type']}}</td>
-                                <td>{{$transation['created_at']}}</td>
-                                <td>{{ $transation['status']}}</td>
-
-                            </tr>
-                                
+                            @foreach ($wallet['alltransation'] ?? [] as $key => $transation)
+                                <tr>
+                                    <td>{{ ++$key }}</td>
+                                    <td>TID{{ $transation['id'] }}</td>
+                                    <td>{{ $transation['amount'] }}</td>
+                                    <td>{{ $transation['transaction_type']}}</td>
+                                    <td>{{$transation['created_at']}}</td>
+                                    <td>{{ $transation['status']}}</td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>

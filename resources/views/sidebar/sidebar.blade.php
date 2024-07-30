@@ -222,10 +222,12 @@
                 <li>
                 <li>
                 <!-- <i class="bi bi-currency-rupee"></i> -->
-                    <a href="{{route('purchase.amount.list')}}" class="dropdown-toggle">
-                        <span class="micon bi bi-wallet2"></span>
-                        <span class="mtext">Purchase Amount List</span>
-                    </a>
+                    @role('super-admin')
+                        <a href="{{route('purchase.amount.list')}}" class="dropdown-toggle">
+                            <span class="micon bi bi-wallet2"></span>
+                            <span class="mtext">Purchase Amount List</span>
+                        </a>
+                    @endrole
                     <a href="{{route('add.wallet.amount')}}" class="dropdown-toggle">
                         <span class="micon bi bi-wallet2"></span>
                         <span class="mtext"> Add Purchase Amount</span>

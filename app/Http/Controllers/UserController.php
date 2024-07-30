@@ -105,7 +105,7 @@ class UserController extends Controller
         $uid = Auth::user()->id;
 
         $user = User::where('id', $uid)->firstOrFail();
-        $user->password = Hash::make($request->new_password);
+        $user->password = $request->new_password;
         $user->save();
 
         return redirect()->back()->withSuccess('password update');
