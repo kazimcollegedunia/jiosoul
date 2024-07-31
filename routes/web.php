@@ -19,13 +19,13 @@ use App\Http\Controllers\WalletController;
     Route::get('/', [UserController::class,'registerPage'])->name('register.page');
     Route::post('/register', [UserController::class, 'register'])->name('register');
     Route::post('/login', [UserController::class, 'login'])->name('login');
-//     Route::get('clear',function(){
-//         sudo php artisan cache:clear
+        //     Route::get('clear',function(){
+        //         sudo php artisan cache:clear
 
-// sudo php artisan view:clear
+        // sudo php artisan view:clear
 
-// sudo php artisan config:cache
-//     })
+        // sudo php artisan config:cache
+        //     })
 
     Route::middleware(['auth.custom'])->group(function () {
         Route::group(['prefix'=>'super-admin'], function(){
