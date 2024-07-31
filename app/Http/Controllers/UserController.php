@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use App\Models\UserChild;
 
 class UserController extends Controller
 {
@@ -82,11 +83,10 @@ class UserController extends Controller
         return redirect()->back()->withSuccess($message);
     }
 
-    public function updateProfile(Request $request){
+    public function updateProfile(Request $request) {
         $uid = Auth::user()->id;
-        // dd($request->all());
         $user = User::where('id', $uid)->firstOrFail();
-
+    
         $user->update([
             'name' => Auth::user()->name,
             'email' => $request->email,
@@ -94,9 +94,28 @@ class UserController extends Controller
             'employee_id' => Auth::user()->employee_id,
             'parent_id' => $request->parent_id,
         ]);
-
+    
+        if ($request->parent_id) {
+            $currentParentChild = UserChild::where('child_id', $uid)->first();
+            
+            if ($currentParentChild) {
+                if ($currentParentChild->parent_id != $request->parent_id) {
+                    $currentParentChild->delete();
+    
+                    $newParentChild = new UserChild;
+                    $newParentChild->parent_id = $request->parent_id;
+                    $newParentChild->child_id = $uid;
+                    $newParentChild->save();
+                }
+            } else {
+                $newParentChild = new UserChild;
+                $newParentChild->parent_id = $request->parent_id;
+                $newParentChild->child_id = $uid;
+                $newParentChild->save();
+            }
+        }
+    
         $message = "Details Updated";
-
         return redirect()->back()->withSuccess($message);
     }
 
@@ -150,8 +169,15 @@ class UserController extends Controller
         $user = User::where('employee_id', $request->employee_id)->first();
 
         // Check if user exists and password matches
-        if ($user && $user->password == $request->password) {
-            // Authenticate the user
+        if (!empty($user) && $user->password == $request->password) {
+            if(!$user->status){
+                return redirect()->back()->withErrors('Credentials status is pending (not approve yet)');
+            }
+
+            if(!$user->is_active){
+                return redirect()->back()->withErrors('You are inactive ! Please conncet with Admin');
+            }
+
             auth()->login($user);
             return redirect()->route('user.dashboard');
         }

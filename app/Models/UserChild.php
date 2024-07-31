@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserChild extends Model
 {
     use HasFactory;
+    public $timestamps = false;
 
      // Define the parent relationship
      public function parent()
