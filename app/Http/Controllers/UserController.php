@@ -63,23 +63,31 @@ class UserController extends Controller
     }
 
     public function changePasswordByadmin(Request $request){
+        $uid = Auth::user()->id;
         $request->validate([
             'name' => 'required|string',
-            'password' => 'required|min:6',
+            'password' => $request->password ? 'required|min:6' : '',
         ]);
 
         $uid = $request->uid;
         // dd($uid);
 
         $user = User::where('id', $uid)->firstOrFail();
+        if($request->password){
+            $user->update([
+                'name' => $request->name,
+                'password' =>$request->password,
+            ]);
 
-        $user->update([
-            'name' => $request->name,
-            'password' =>$request->password,
-        ]);
-        
-        $message = "User Created successfull";
-        
+            $message = "User Created successfull";
+
+        }
+
+        if($request->parent_id){
+            self::updateParent($uid,$request->parent_id);
+            $message = "User parent updated successfully";
+        }
+
         return redirect()->back()->withSuccess($message);
     }
 
@@ -96,28 +104,33 @@ class UserController extends Controller
         ]);
     
         if ($request->parent_id) {
-            $currentParentChild = UserChild::where('child_id', $uid)->first();
-            
-            if ($currentParentChild) {
-                if ($currentParentChild->parent_id != $request->parent_id) {
-                    $currentParentChild->delete();
-    
-                    $newParentChild = new UserChild;
-                    $newParentChild->parent_id = $request->parent_id;
-                    $newParentChild->child_id = $uid;
-                    $newParentChild->save();
-                }
-            } else {
-                $newParentChild = new UserChild;
-                $newParentChild->parent_id = $request->parent_id;
-                $newParentChild->child_id = $uid;
-                $newParentChild->save();
-            }
+            self::updateParent($uid,$request->parent_id);
         }
     
         $message = "Details Updated";
         return redirect()->back()->withSuccess($message);
     }
+
+    public static function updateParent($uid,$parent_id){
+        $currentParentChild = UserChild::where('child_id', $uid)->first();
+            
+            if ($currentParentChild) {
+                if ($currentParentChild->parent_id != $parent_id) {
+                    $currentParentChild->delete();
+    
+                    $newParentChild = new UserChild;
+                    $newParentChild->parent_id = $parent_id;
+                    $newParentChild->child_id = $uid;
+                    $newParentChild->save();
+                }
+            } else {
+                $newParentChild = new UserChild;
+                $newParentChild->parent_id = $parent_id;
+                $newParentChild->child_id = $uid;
+                $newParentChild->save();
+            }
+    }
+
 
     public function userProfilePasswordUpdate(Request $request){
 
@@ -199,7 +212,7 @@ class UserController extends Controller
     }
 
     public function userLists(){
-        $users = User::paginate(10);
+        $users = User::with('userParent')->paginate(10);
         return view('admin_pages.user_lists',compact('users'));
     }
 
@@ -212,6 +225,13 @@ class UserController extends Controller
     }
 
     public function editProfile(User $user ,$uid){
+        $user = $user->find($uid);
+        $users = User::activeUser()->get();
+
+        return view('admin_pages.user_profile',compact('user','users'));
+    }
+
+    public function userParentAssign(User $user ,$uid){
         $user = $user->find($uid);
         return view('admin_pages.user_profile',compact('user'));
     }

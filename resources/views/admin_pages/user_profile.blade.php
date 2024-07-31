@@ -31,7 +31,7 @@
                 @endif
                 <div>
                     <div class="text text-right m-2">
-                        <a href="javascript:void(0)" class="btn btn-success" onclick="showUserProfile('parent_child')">Assign Parent</a>
+                        <a href="javascript:void(0)" class="btn btn-success" id="top-button" onclick="showUserProfile('parent')">Assign Parent</a>
                     </div>
                     <div class="m-2">
                         <h5>Employee Id : {{$user->employee_id}}</h5>
@@ -60,6 +60,17 @@
                                      @enderror
                                 </div>
                             </div>
+                            <div class="col-sm-12 col-md-4" id="parent_container" style="display:none">
+                                <div class="form-group">
+                                    <label class="label text text-danger" for="parent_id"><b class="">Select Parents* :</b></label>
+                                    <select name="parent_id" id="parent_id" class="form-control">
+                                        <option value="" selected disabled>Select Parent</option>
+                                        @foreach($users as $user)
+                                            <option value="{{$user->id}}">{{$user->fullNameWithId}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-sm-12 col-md-12">
                                 <div class="form-group">
                                     <input type="submit" name="" class="btn btn-success">
@@ -73,23 +84,33 @@
             </div>
         </div>
 
-            
-
         </div>
     </div>
 
     <div class="row pb-10">
-
     </div>
 @endsection
 
 @push('js_links')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script type="text/javascript">
         function showUserProfile(type) {
-            let containerId = `${type}FormContainer`;
-            $(`#${containerId}`).show();
+            if(type == "parent"){
+                $("#parent_container").show();
+                $("#password_container").hide();
+                $('#top-button').text('Update Parent');
+            }
+            if(type == "password"){
+                $("#password_container").show();
+                $("#parent_container").hide();
+                $('#top-button').text('Change Password');
+            }
         }
-</script>
+
+        $(`#parent_id`).select2({
+            theme: 'bootstrap4',
+        });
+    </script>
 @endpush

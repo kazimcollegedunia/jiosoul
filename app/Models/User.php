@@ -154,6 +154,15 @@ class User extends Authenticatable
         return $parentsWithAncestors;
     }
 
+    public  function userParent(){
+        return $this->hasOne(UserChild::class,'child_id','id');
+    }
+    
+    public  function scopeActiveUser($query){
+        return $query->where('is_active',true)->where('status',true);
+    }
+
+
     public static function getParentHierarchy($parents)
     {
         $parentsArray = [];
