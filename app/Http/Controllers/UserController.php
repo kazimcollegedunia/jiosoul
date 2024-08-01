@@ -17,15 +17,23 @@ class UserController extends Controller
 
     public function register(Request $request)
     {
-
+        
         $request->validate([
             'name' => 'required|string',
             'mobile_no' => 'required|string|digits:10|unique:users,mobile_no,',
             'password' => 'required|min:6',
         ]);
 
-            $parent_id = $this->checkParentId($request->employee_id);
+            $parent_id = null;
+            if(!empty($request->employee_id)){
+                $parent_id = $this->checkParentId($request->employee_id);
 
+                if(!$parent_id){
+                    $message = "This $request->employee_id is not exists please check and varify";
+                    return redirect()->back()->withSuccess($message);
+                }
+            }
+            
             $uid = $request->uid ?? null;
             if ($request->uid) {
 
@@ -59,6 +67,9 @@ class UserController extends Controller
 
                 $message = "User Created successfull";
             }
+
+            self::updateParent($user->id,$parent_id);
+
             return redirect()->back()->withSuccess($message);
     }
 
@@ -112,7 +123,8 @@ class UserController extends Controller
     }
 
     public static function updateParent($uid,$parent_id){
-        $currentParentChild = UserChild::where('child_id', $uid)->first();
+        if(!empty($uid) && !empty($parent_id)){
+            $currentParentChild = UserChild::where('child_id', $uid)->first();
             
             if ($currentParentChild) {
                 if ($currentParentChild->parent_id != $parent_id) {
@@ -129,6 +141,7 @@ class UserController extends Controller
                 $newParentChild->child_id = $uid;
                 $newParentChild->save();
             }
+        }
     }
 
 
