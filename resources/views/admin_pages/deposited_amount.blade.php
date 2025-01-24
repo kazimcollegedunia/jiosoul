@@ -28,8 +28,8 @@
                             <div class="col-sm-6 col-md-3">
                                 <label class="label" for="status">Status :</label>
                                 <select class="form-control" name="status" id="status">
-                                    <option value="all">All</option>
-                                    <option value="0" selected>Pending</option>
+                                    <option value="all" selected>All</option>
+                                    <option value="0">Pending</option>
                                     <option value="1">Approve</option>
                                     <option value="2">Reject</option>
 

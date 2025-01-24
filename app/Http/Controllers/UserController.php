@@ -86,18 +86,25 @@ class UserController extends Controller
         $uid = Auth::user()->id;
         // dd($request->all());
         $user = User::where('id', $uid)->firstOrFail();
+        // dd($user); 
+
+        $parent_id =  $this->_getParentId($request);
 
         $user->update([
             'name' => Auth::user()->name,
             'email' => $request->email,
             'mobile_no' => $request->mobile_no,
             'employee_id' => Auth::user()->employee_id,
-            'parent_id' => $request->parent_id,
+            'parent_id' => $parent_id,
         ]);
 
         $message = "Details Updated";
 
         return redirect()->back()->withSuccess($message);
+    }
+
+    protected function _getParentId(){
+            //isset($request->parent_id) && !empty($request->parent_id) ? $request->parent_id : $user->parent_id;
     }
 
     public function userProfilePasswordUpdate(Request $request){
