@@ -118,7 +118,7 @@ class UserController extends Controller
         $uid = Auth::user()->id;
 
         $user = User::where('id', $uid)->firstOrFail();
-        $user->password = Hash::make($request->new_password);
+        $user->password = $request->new_password;
         $user->save();
 
         return redirect()->back()->withSuccess('password update');
@@ -128,7 +128,7 @@ class UserController extends Controller
         $parent_id = strtoupper($parent_id);
         $parentID = false;
         $parentDetails = User::where('employee_id',$parent_id)->first(); 
-        if($parentDetails){
+        if(!empty($parentDetails)){
             $parentID = $parentDetails->id;
         }
 
