@@ -88,7 +88,7 @@ class UserController extends Controller
         $user = User::where('id', $uid)->firstOrFail();
         // dd($user); 
 
-        $parent_id =  $this->_getParentId($request);
+        $parent_id =  $this->_getParentId($request,$user);
 
         $user->update([
             'name' => Auth::user()->name,
@@ -103,8 +103,14 @@ class UserController extends Controller
         return redirect()->back()->withSuccess($message);
     }
 
-    protected function _getParentId(){
-            //isset($request->parent_id) && !empty($request->parent_id) ? $request->parent_id : $user->parent_id;
+    protected function _getParentId($requestData,$user){
+            $parent_id = 1;
+            if(isset($requestData->parent_id) && !empty($requestData->parent_id)){
+                if(!empty($user) && $user->id !== 1){
+                    $parent_id = $requestData->parent_id ? $requestData->parent_id : $user->parent_id;
+                }
+            }
+            return  $parent_id;
     }
 
     public function userProfilePasswordUpdate(Request $request){
