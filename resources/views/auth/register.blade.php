@@ -9,19 +9,19 @@
         <link
             rel="apple-touch-icon"
             sizes="180x180"
-            href="{{asset('public/vendors/images/apple-touch-icon.png')}}"
+            href="{{asset('vendors/images/apple-touch-icon.png')}}"
         />
         <link
             rel="icon"
             type="image/png"
             sizes="32x32"
-            href="{{asset('public/vendors/images/favicon-32x32.png')}}"
+            href="{{asset('vendors/images/favicon-32x32.png')}}"
         />
         <link
             rel="icon"
             type="image/png"
             sizes="16x16"
-            href="{{asset('public/vendors/images/favicon-16x16.png')}}"
+            href="{{asset('vendors/images/favicon-16x16.png')}}"
         />
 
         <!-- Mobile Specific Metas -->
@@ -36,18 +36,18 @@
             rel="stylesheet"
         />
         <!-- CSS -->
-        <link rel="stylesheet" type="text/css" href="{{asset('public/vendors/styles/core.css')}}" />
+        <link rel="stylesheet" type="text/css" href="{{asset('vendors/styles/core.css')}}" />
         <link
             rel="stylesheet"
             type="text/css"
-            href="{{asset('public/vendors/styles/icon-font.min.css')}}"
+            href="{{asset('vendors/styles/icon-font.min.css')}}"
         />
         <link
             rel="stylesheet"
             type="text/css"
-            href="{{asset('public/src/plugins/jquery-steps/jquery.steps.css')}}"
+            href="{{asset('src/plugins/jquery-steps/jquery.steps.css')}}"
         />
-        <link rel="stylesheet" type="text/css" href="{{asset('public/vendors/styles/style.css')}}" />
+        <link rel="stylesheet" type="text/css" href="{{asset('vendors/styles/style.css')}}" />
 
         <!-- Global site tag (gtag.js) - Google Analytics -->
         <script
@@ -70,7 +70,7 @@
             >
             <div class="brand-logo">
                 <a href="login.html">
-                <img src="{{asset('public/vendors/images/deskapp-logo.svg')}}" alt="" />
+                <img src="{{asset('vendors/images/deskapp-logo.svg')}}" alt="" />
                 </a>
             </div>
             <div class="login-menu">
@@ -117,12 +117,12 @@
 
         <!-- welcome modal end -->
         <!-- js -->
-        <script src="{{asset('public/vendors/scripts/core.js')}}"></script>
-        <script src="{{asset('public/vendors/scripts/script.min.js')}}"></script>
-        <script src="{{asset('public/vendors/scripts/process.js')}}"></script>
-        <script src="{{asset('public/vendors/scripts/layout-settings.js')}}"></script>
-        <script src="{{asset('public/src/plugins/jquery-steps/jquery.steps.js')}}"></script>
-        <script src="{{asset('public/vendors/scripts/steps-setting.js')}}"></script>
+        <script src="{{asset('vendors/scripts/core.js')}}"></script>
+        <script src="{{asset('vendors/scripts/script.min.js')}}"></script>
+        <script src="{{asset('vendors/scripts/process.js')}}"></script>
+        <script src="{{asset('vendors/scripts/layout-settings.js')}}"></script>
+        <script src="{{asset('src/plugins/jquery-steps/jquery.steps.js')}}"></script>
+        <script src="{{asset('vendors/scripts/steps-setting.js')}}"></script>
         <!-- Google Tag Manager (noscript) -->
         <script type="text/javascript">
            $(function () {

@@ -111,7 +111,6 @@ class User extends Authenticatable
             ->toArray();
     
         $childrenWithDescendants = self::getChildHierarchy($children);
-    
         return $childrenWithDescendants;
     }
     
@@ -142,10 +141,54 @@ class User extends Authenticatable
         return $childrenArray;
     }
 
-     public function parents()
-     {
-         return $this->hasMany(UserChild::class, 'child_id');
-     }
+    public static function parents($child_id)
+    {
+        $parents = DB::table('user_children as uc')
+            ->select('u.name as user_name', 'u.employee_id as employee_id', 'u.id as user_id')
+            ->join('users as u', 'u.id', '=', 'uc.parent_id')
+            ->where('uc.child_id', $child_id)
+            ->get()
+            ->toArray();
+
+        $parentsWithAncestors = self::getParentHierarchy($parents);
+        return $parentsWithAncestors;
+    }
+
+    public  function userParent(){
+        return $this->hasOne(UserChild::class,'child_id','id');
+    }
+    
+    public  function scopeActiveUser($query){
+        return $query->where('is_active',true)->where('status',true);
+    }
+
+
+    public static function getParentHierarchy($parents)
+    {
+        $parentsArray = [];
+        
+        foreach ($parents as $parent) {
+            $parentId = $parent->user_id;
+
+            $grandparents = DB::table('user_children as uc')
+                ->select('u.name as user_name', 'u.employee_id as employee_id', 'u.id as user_id')
+                ->join('users as u', 'u.id', '=', 'uc.parent_id')
+                ->where('uc.child_id', $parentId)
+                ->get()
+                ->toArray();
+
+            $parentHierarchy = self::getParentHierarchy($grandparents);
+            
+            $parentsArray[] = [
+                'user_name' => $parent->user_name,
+                'employee_id' => $parent->employee_id,
+                'user_id' => $parent->user_id,
+                'parents' => $parentHierarchy
+            ];
+        }
+    
+        return $parentsArray;
+    }
 
     
 }

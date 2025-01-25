@@ -37,24 +37,41 @@
 
 				<div class="pd-20 card-box height-100-p">
 					<div class="row">
-						<div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mb-30">
+						<div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-30">
 							<button onclick="changePassword()" class="btn btn-success" id="action-button">Change Password</button>
+							<button onclick="updateBankDetails()" class="btn btn-info" id="action-button">Update Bank Details</button>
 						</div>
 					</div>
 					<div id="update-password" style="display: none;">
-
 						<form action="{{route('user.profile.password.update')}}" method="post">
 							@csrf
 							
 							<div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-30">
 								<label for="new_password" class="aria-label text-green">New Password </label>
-								<input type="text" class="form-control" name="new_password" id="new_password" placeholder="new password">
+								<input type="text" class="form-control" name="new_password" id="new_password" placeholder="new password" required>
 							</div>
 							<div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-30">
 								<input type="submit" name="" class="btn btn-success btn-block">
 							</div>
 						</form>
+					</div>
 
+					<div id="update-bank-details" style="display: none;">
+						<form action="{{route('user.profile.password.update')}}" method="post">
+							@csrf
+							
+							<div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mb-30">
+								<label for="ac_number" class="aria-label text-green">AC number </label>
+								<input type="text" class="form-control" name="ac_number" id="ac_number" placeholder="AC Number" required>
+							</div>
+							<div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mb-30">
+								<label for="ifsc_code" class="aria-label text-green">IFSC Code </label>
+								<input type="text" class="form-control" name="ifsc_code" id="ifsc_code" placeholder="IFSC Code" required>
+							</div>
+							<div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mb-30">
+								<input type="submit" name="" class="btn btn-success btn-block">
+							</div>
+						</form>
 					</div>
 
 
@@ -138,6 +155,15 @@
 		    $('#action-button').text('Update Password');
 		    $("#update-details").show();
 		    $("#update-password").hide();
+		}
+
+		function updateBankDetails(){
+			$('#action-button').attr('onClick', 'bankDetails()');
+		    $('#action-button').text('Update Bank Details');
+		    $("#update-bank-details").show();
+		    $("#update-password").hide();
+		    $("#update-details").hide();
+
 		}
 
     	$(`#parent_id,#child_id,#designation`).select2({

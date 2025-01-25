@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use App\Models\UserChild;
 
 class UserController extends Controller
 {
@@ -16,15 +17,23 @@ class UserController extends Controller
 
     public function register(Request $request)
     {
-
+        
         $request->validate([
             'name' => 'required|string',
             'mobile_no' => 'required|string|digits:10|unique:users,mobile_no,',
             'password' => 'required|min:6',
         ]);
 
-            $parent_id = $this->checkParentId($request->employee_id);
+            $parent_id = null;
+            if(!empty($request->employee_id)){
+                $parent_id = $this->checkParentId($request->employee_id);
 
+                if(!$parent_id){
+                    $message = "This $request->employee_id is not exists please check and varify";
+                    return redirect()->back()->withSuccess($message);
+                }
+            }
+            
             $uid = $request->uid ?? null;
             if ($request->uid) {
 
@@ -58,67 +67,90 @@ class UserController extends Controller
 
                 $message = "User Created successfull";
             }
+
+            self::updateParent($user->id,$parent_id);
+
             return redirect()->back()->withSuccess($message);
     }
 
     public function changePasswordByadmin(Request $request){
+        $uid = Auth::user()->id;
         $request->validate([
             'name' => 'required|string',
-            'password' => 'required|min:6',
+            'password' => $request->password ? 'required|min:6' : '',
         ]);
 
         $uid = $request->uid;
         // dd($uid);
 
         $user = User::where('id', $uid)->firstOrFail();
+        if($request->password){
+            $user->update([
+                'name' => $request->name,
+                'password' =>$request->password,
+            ]);
 
-        $user->update([
-            'name' => $request->name,
-            'password' =>$request->password,
-        ]);
-        
-        $message = "User Created successfull";
-        
+            $message = "User Created successfull";
+
+        }
+
+        if($request->parent_id){
+            self::updateParent($uid,$request->parent_id);
+            $message = "User parent updated successfully";
+        }
+
         return redirect()->back()->withSuccess($message);
     }
 
-    public function updateProfile(Request $request){
+    public function updateProfile(Request $request) {
         $uid = Auth::user()->id;
-        // dd($request->all());
         $user = User::where('id', $uid)->firstOrFail();
-        // dd($user); 
-
-        $parent_id =  $this->_getParentId($request,$user);
-
+    
         $user->update([
             'name' => Auth::user()->name,
             'email' => $request->email,
             'mobile_no' => $request->mobile_no,
             'employee_id' => Auth::user()->employee_id,
-            'parent_id' => $parent_id,
+            'parent_id' => $request->parent_id,
         ]);
-
+    
+        if ($request->parent_id) {
+            self::updateParent($uid,$request->parent_id);
+        }
+    
         $message = "Details Updated";
-
         return redirect()->back()->withSuccess($message);
     }
 
-    protected function _getParentId($requestData,$user){
-            $parent_id = 1;
-            if(isset($requestData->parent_id) && !empty($requestData->parent_id)){
-                if(!empty($user) && $user->id !== 1){
-                    $parent_id = $requestData->parent_id ? $requestData->parent_id : $user->parent_id;
+    public static function updateParent($uid,$parent_id){
+        if(!empty($uid) && !empty($parent_id)){
+            $currentParentChild = UserChild::where('child_id', $uid)->first();
+            
+            if ($currentParentChild) {
+                if ($currentParentChild->parent_id != $parent_id) {
+                    $currentParentChild->delete();
+    
+                    $newParentChild = new UserChild;
+                    $newParentChild->parent_id = $parent_id;
+                    $newParentChild->child_id = $uid;
+                    $newParentChild->save();
                 }
+            } else {
+                $newParentChild = new UserChild;
+                $newParentChild->parent_id = $parent_id;
+                $newParentChild->child_id = $uid;
+                $newParentChild->save();
             }
-            return  $parent_id;
+        }
     }
+
 
     public function userProfilePasswordUpdate(Request $request){
 
         $uid = Auth::user()->id;
 
         $user = User::where('id', $uid)->firstOrFail();
-        $user->password = Hash::make($request->new_password);
+        $user->password = $request->new_password;
         $user->save();
 
         return redirect()->back()->withSuccess('password update');
@@ -163,8 +195,15 @@ class UserController extends Controller
         $user = User::where('employee_id', $request->employee_id)->first();
 
         // Check if user exists and password matches
-        if ($user && $user->password == $request->password) {
-            // Authenticate the user
+        if (!empty($user) && $user->password == $request->password) {
+            if(!$user->status){
+                return redirect()->back()->withErrors('Credentials status is pending (not approve yet)');
+            }
+
+            if(!$user->is_active){
+                return redirect()->back()->withErrors('You are inactive ! Please conncet with Admin');
+            }
+
             auth()->login($user);
             return redirect()->route('user.dashboard');
         }
@@ -186,7 +225,7 @@ class UserController extends Controller
     }
 
     public function userLists(){
-        $users = User::paginate(10);
+        $users = User::with('userParent')->paginate(10);
         return view('admin_pages.user_lists',compact('users'));
     }
 
@@ -199,6 +238,13 @@ class UserController extends Controller
     }
 
     public function editProfile(User $user ,$uid){
+        $user = $user->find($uid);
+        $users = User::activeUser()->get();
+
+        return view('admin_pages.user_profile',compact('user','users'));
+    }
+
+    public function userParentAssign(User $user ,$uid){
         $user = $user->find($uid);
         return view('admin_pages.user_profile',compact('user'));
     }

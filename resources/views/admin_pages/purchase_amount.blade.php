@@ -21,7 +21,7 @@
                 </div>
                 <div class="pd-20">
                     <div class="text text-right">
-                        <a href="{{route('total.payment.filter')}}" class="btn btn-primary">Total Payment Filter</a>
+                        <a href="{{route('wallet.amount.process')}}" class=" btn btn-info"> <i class="micon bi bi-wallet2"></i> Wallet Payment Process</a>
                     </div>
                     <form>
                         <div class="row">
@@ -29,9 +29,9 @@
                                 <label class="label" for="status">Status :</label>
                                 <select class="form-control" name="status" id="status">
                                     <option value="all">All</option>
-                                    <option value="0" selected>Pending</option>
-                                    <option value="1">Approve</option>
-                                    <option value="2">Reject</option>
+                                    @foreach($status as $key=>$statu)
+                                        <option value="{{$statu}}">{{ucwords(str_replace('_',' ',$key))}}</option>
+                                    @endforeach
 
                                 </select>
                             </div>
@@ -87,8 +87,7 @@
                                 <th>User Name</th>
                                 <th>Payment ID</th>
                                 <th>Amount</th>
-                                <th>Payment Mode</th>
-                                <th>Payment Date</th>
+                                <th>Status</th>
                                 <th>Action</th>
                                 </tr>
                             </thead>
@@ -115,7 +114,7 @@
                 processing: true,
                 serverSide: true,
                 ajax: {
-                  url: "{{ route('deposit.datatable') }}",
+                  url: "{{ route('purchase.amount.datatable') }}",
                   data: function (d) {
                         d.status = $('#status').val(),
                         d.payment_from = $('#payment_from').val(),
@@ -126,12 +125,11 @@
                 },
                 columns: [
                     {data: 'id', name: 'id', searchable: true, orderable: true},
-                    {data: 'name', name: 'name', searchable: true, orderable: true},
-                    {data: 'payment_id', name: 'payment_id', searchable: true, orderable: true},
+                    {data: 'user_name', name: 'user_name', searchable: true, orderable: true},
+                    {data: 'tid', name: 'tid', searchable: true, orderable: true},
                     {data: 'amount', name: 'amount', searchable: true, orderable: true},
-                    {data: 'payment_mode', name: 'payment_mode', searchable: true, orderable: true},
-                    {data: 'payment_date', name: 'payment_date', searchable: true, orderable: true},
                     {data: 'status', name: 'status', searchable: true, orderable: true},
+                    {data: 'action', name: 'action', searchable: true, orderable: true},
                 ],
                 "language": {
                 "emptyTable": "No job found.",
