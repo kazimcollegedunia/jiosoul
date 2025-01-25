@@ -26,5 +26,9 @@ Homestead.json
  composer.lock
  jio.sql
  composer.lock
-
+	/.htaccess
+	/composer-setup.php
+	/error_log
+	/public_html/
+	/test.php
  .gitignore

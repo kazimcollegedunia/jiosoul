@@ -160,7 +160,7 @@ class UserController extends Controller
         $parent_id = strtoupper($parent_id);
         $parentID = false;
         $parentDetails = User::where('employee_id',$parent_id)->first(); 
-        if($parentDetails){
+        if(!empty($parentDetails)){
             $parentID = $parentDetails->id;
         }
 
