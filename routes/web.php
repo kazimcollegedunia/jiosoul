@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AmountCollectionController;
+use App\Http\Controllers\WalletController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,13 +19,13 @@ use App\Http\Controllers\AmountCollectionController;
     Route::get('/', [UserController::class,'registerPage'])->name('register.page');
     Route::post('/register', [UserController::class, 'register'])->name('register');
     Route::post('/login', [UserController::class, 'login'])->name('login');
-//     Route::get('clear',function(){
-//         sudo php artisan cache:clear
+        //     Route::get('clear',function(){
+        //         sudo php artisan cache:clear
 
-// sudo php artisan view:clear
+        // sudo php artisan view:clear
 
-// sudo php artisan config:cache
-//     })
+        // sudo php artisan config:cache
+        //     })
 
     Route::middleware(['auth.custom'])->group(function () {
         Route::group(['prefix'=>'super-admin'], function(){
@@ -57,8 +58,19 @@ use App\Http\Controllers\AmountCollectionController;
             Route::get('deposit-datatable', [AmountCollectionController::class,'depositDatatable'])->name('deposit.datatable');
             Route::get('payment-filter', [AmountCollectionController::class,'totalPaymentFilter'])->name('total.payment.filter');
             Route::post('payment-filter', [AmountCollectionController::class,'paymentFilter'])->name('user.payment.filter');
-            Route::get('wallet', [AmountCollectionController::class,'userWallet'])->name('user.wallet');
-            Route::post('wallet-wthdrawal', [AmountCollectionController::class,'walletWthdrawal'])->name('wallet.wthdrawal');
+        });
+        Route::group(['prefix'=>'wallet'], function(){
+            Route::get('/', [WalletController::class,'userWallet'])->name('user.wallet');
+            Route::post('wthdrawal', [WalletController::class,'walletWthdrawal'])->name('wallet.wthdrawal');
+            Route::get('add', [WalletController::class,'addWalletAmount'])->name('add.wallet.amount');
+            Route::post('add-amount-store', [WalletController::class,'addWalletAmountStore'])->name('add.wallet.amount.store');
+            Route::get('purchase-amount', [WalletController::class,'purchaseAmountList'])->name('purchase.amount.list');
+            Route::get('purchase-amount-datatable', [WalletController::class,'purchaseAmountDatatable'])->name('purchase.amount.datatable');
+            Route::get('update-purchase-amount/{id}/{status}', [WalletController::class,'updatepurchaseAmount'])->name('update.purchase.amount');
+            Route::get('view-purchase-amount/{id}', [WalletController::class,'viewPurchaseAmount'])->name('view.purchase.amount');
+            Route::get('all-amount-update/{id}/{status}', [WalletController::class,'walletAllAmountUpdate'])->name('wallet.all.amount.update');
+            Route::get('amount-process', [WalletController::class,'walletAmountProcess'])->name('wallet.amount.process');
+            Route::get('amount-process-datatable', [WalletController::class,'amountProcessDatatable'])->name('amount.process.datatable');
         });
 
         Route::get('new-user', function(){

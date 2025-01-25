@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUserWalletHistoriesTable extends Migration
+class CreateUserBankDetailsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,16 @@ class CreateUserWalletHistoriesTable extends Migration
      */
     public function up()
     {
-        Schema::create('user_wallet_histories', function (Blueprint $table) {
+        Schema::create('user_bank_details', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id');
-            $table->float('amount', 8, 2);
-            $table->integer('transaction_type')->comment("1:credit,2:debit");
-            $table->integer('transaction_parent_id')->nullable()->comment("id is parent id");
+            $table->integer('ac_number')->nullable();
+            $table->string('user_name')->nullable();
+            $table->string('ifsc')->nullable();
+            $table->string('upi_id')->nullable();
+            $table->string('alternate_upi_id')->nullable();
             $table->integer('status')->default(true);
+            $table->integer('is_bank_ac')->nullable();
             $table->timestamps();
         });
     }
@@ -31,6 +34,6 @@ class CreateUserWalletHistoriesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user_wallet_histories');
+        Schema::dropIfExists('user_bank_details');
     }
 }

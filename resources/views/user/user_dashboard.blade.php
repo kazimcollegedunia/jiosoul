@@ -122,14 +122,16 @@
 
                 <div class="col-lg-6 col-md-6 col-sm-6 m-1">
                     <ul id="user-hierarchy" class="list-group">
-                        @foreach($childNodes as $user)
-                            @include('layout.recursive_node', ['user' => $user])
-                        @endforeach
+                        @if(!empty($childNodes))
+                            @foreach($childNodes as $user)
+                                @include('layout.recursive_node', ['user' => $user])
+                            @endforeach
+                        @endif
                     </ul>
                     <!-- <div class="col-lg-12 col-md-12 col-sm-12">
                         <div class="sitemap">
                             <h5 class="h5">Your Ancestor</h5>
-                            @include('layout.recursive_node', ['nodes' => $childNodes])
+                            include('layout.recursive_node', ['nodes' => $childNodes])
                         </div>
                     </div> -->
                 </div>

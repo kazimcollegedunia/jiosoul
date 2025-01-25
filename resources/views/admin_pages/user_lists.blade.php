@@ -26,9 +26,7 @@
                             <th>S.no</th>
                             <th>Empl ID</th>
                             <th>Name</th>
-                            <th>Email</th>
-                            <th>Password</th>
-                            <th>Mobile No</th>
+                            <th>User Parent</th>                            
                             <th>Active</th>
                             <th>Status</th>
                             <th>created At</th>
@@ -40,10 +38,8 @@
                             <tr>
                                 <td>{{ ++$key }}</td>
                                 <td>{{ $user->employee_id}}</td>
-                                <td>{{ ucwords($user->name) }}</td>
-                                <td>{{ $user->email??'NA'}}</td>
-                                <td>{{ $user->password}}</td>
-                                <td>{{ $user->mobile_no??'NA'}}</td>
+                                <td>{{ ucwords($user->fullNameWithId) }}</td>
+                                <td>{{ $user->userParent?$user->userParent->parent->fullNameWithId : 'NA'}}</td>
                                 <td><p class="text text-{{ $user->is_active?'success':'warning'}} ">{{ $user->is_active?'Active':'Inactive'}}</td>
                                 <td><p class="text text-{{ $user->status?'success':'warning'}} ">{{ $user->status?'Approved':'Pending'}}</td>
                                 <td>{{ Carbon\Carbon::parse($user->created_at)->format('jS F Y h:m')}}</td>

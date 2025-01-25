@@ -4,26 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\AmountCollection;
 use App\Models\User;
-use App\Models\UserWalletHistory;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Services\AmountCollectionService;
 use App\Services\TimelineActionService;
-use App\Services\WalletService;
-use Illuminate\Support\Facades\Log;
 
 class AmountCollectionController extends Controller
 {
 
     protected $acService;
     protected $timelineAction;
-    protected $walletService;
 
-    public function __construct(AmountCollectionService $acService,TimelineActionService $timelineAction,WalletService $walletService){
+    public function __construct(AmountCollectionService $acService,TimelineActionService $timelineAction){
         $this->acService = $acService;
         $this->timelineAction = $timelineAction;
-        $this->walletService = $walletService;
     }
 
     public function index()
@@ -89,13 +84,7 @@ class AmountCollectionController extends Controller
         $users = User::get();
         return view('dashboard.dashboard',compact('users'));
     }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    
     public function store(Request $request)
     {
         $collection = new AmountCollection;
@@ -197,42 +186,5 @@ class AmountCollectionController extends Controller
         $filter =  $this->acService->amountCollectionData($request);
 
         return json_encode(['filter' => $filter]);
-    }
-
-    public function userWallet(){
-        // dd();
-        $user_id =  Auth::user()->id;
-        $wallet = $this->walletService::walletCalculations($user_id);
-        return view('user.user_wallet',compact('wallet'));
-    }
-    public function walletWthdrawal(Request $request){
-        $user_id =  Auth::user()->id;
-
-        $validated = $request->validate([
-            'amount' => 'required|integer|min:100',
-        ],[
-            'amount.min' => "Amount should be minmum 100 ₹"
-        ]);
-
-        $amount = $request->amount;
-        $is_avalibale_amount = $this->walletService::checkWalletBalance($amount,$user_id);
-        if(!$is_avalibale_amount){
-            return redirect()->back()->withError('The wallet balance should be at least '.$amount.' ₹');
-        }
-
-        // try{
-            $userWalletHistory = New UserWalletHistory;
-            $userWalletHistory->user_id =  $user_id;
-            $userWalletHistory->amount =  $amount;
-            $userWalletHistory->transaction_type =  UserWalletHistory::Wallet_TRANSATION['debit_request'];
-            $userWalletHistory->status =  UserWalletHistory::Wallet_STATUS['pending'];
-            $userWalletHistory->save();
-
-            return redirect()->back()->withSuccess('Request Sent Successfull Amount will credit on your AC');
-        // }catch (\Exception $e) {
-        //     Log::info($e);
-        //     return false;
-        // }
-        
     }
 }
