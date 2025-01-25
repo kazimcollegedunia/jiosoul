@@ -12,6 +12,8 @@ use App\Models\UserChild;
 class UserController extends Controller
 {
     public function registerPage(){
+        echo "Work on progress testing"; 
+// dd(2134);
         return view('auth.register');
     }
 
