@@ -22,6 +22,7 @@
                         <!-- <a href="" class=" btn btn-info"> <i class="micon bi bi-wallet2"></i> Wallet Payment Process</a> -->
                     </div>
                     <div class="card">
+                        @if(!empty($payments))
                         <div class="card-body">
                             <h5 class="card-title">Transaction ID: {{ $payments['users']->transaction_id }} - <strong>Amount:</strong> {{ $payments['users']->purchase_amount }} RS</h5>
 
@@ -47,6 +48,32 @@
                             <a href="{{route('wallet.all.amount.update',['id' => $payments['users']->transaction_id ,'status' => App\Models\UserWalletHistory::Wallet_STATUS['approve']])}}" class="btn btn-success">Approve All</a>
                             <a href="{{route('wallet.all.amount.update',['id' => $payments['users']->transaction_id ,'status' => App\Models\UserWalletHistory::Wallet_STATUS['rejected']])}}" class="btn btn-danger">Reject All</a>
                         </div>
+                        @else
+                            <!-- Bootstrap Modal -->
+                            <div class="modal fade" id="noDataModal" tabindex="-1" aria-labelledby="noDataModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="noDataModalLabel">Notice</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <p>No Data Found !!!</p>
+                                    <a href="{{ route('purchase.amount.list') }}" class="btn btn-primary">GO BACK</a>
+                                </div>
+                                </div>
+                            </div>
+                            </div>
+
+                            <!-- Trigger the modal -->
+                            <script>
+                            // Automatically show the modal when the page loads
+                            document.addEventListener('DOMContentLoaded', function () {
+                                var noDataModal = new bootstrap.Modal(document.getElementById('noDataModal'));
+                                noDataModal.show();
+                            });
+                            </script>
+                        @endif
                     </div>
                 </div>
             </div>

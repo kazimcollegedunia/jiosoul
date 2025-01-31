@@ -38,4 +38,14 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+    public function handle($request, Closure $next, $role)
+    {
+        if (!auth()->user()->hasRole($role)) {
+            // Redirect if the user does not have the required role
+            return redirect('/home'); // Or a custom page
+        }
+
+        return $next($request);
+    }
 }

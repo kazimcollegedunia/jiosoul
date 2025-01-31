@@ -35,11 +35,19 @@
 				    </div>
 				@endif
 
+				<div class="pd-5 bg bg-light-blue text-center">
+					<h4 class="text-white-heading h3"  id="profile-title">Update Detail</h4>
+				</div>
 				<div class="pd-20 card-box height-100-p">
 					<div class="row">
-						<div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 mb-30">
-							<button onclick="changePassword()" class="btn btn-success" id="action-button">Change Password</button>
-							<button onclick="updateBankDetails()" class="btn btn-info" id="action-button">Update Bank Details</button>
+						<div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 mb-30">
+							<select id="call-update-form" class="form-control">
+								<option value="details">Update Details</option>
+								<option value="password">Update Password</option>
+								<option value="bank">Update Bank Detail</option>
+							  </select>
+							<!-- <button onclick="changePassword()" class="btn btn-success" id="action-button">Update Password</button>
+							<button onclick="updateBankDetails()" class="btn btn-info" id="action-button">Update Bank Details</button> -->
 						</div>
 					</div>
 					<div id="update-password" style="display: none;">
@@ -143,11 +151,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap-theme/0.1.0-beta.10/select2-bootstrap.min.css"></script>
 
     <script type="text/javascript">
+
+		document.getElementById('call-update-form').addEventListener('change', function () {
+			const selectedValue = this.value;
+
+			if (selectedValue === 'details') {
+			updateDetails();
+			} else if (selectedValue === 'password') {
+			changePassword();
+			} else if (selectedValue === 'bank') {
+			updateBankDetails();
+			}
+		});
+		
 		function changePassword() {
+			console.log('change password');
 		    $('#action-button').attr('onClick', 'updateDetails()');
 		    $('#action-button').text('Update Details');
 		    $("#update-details").hide();
 		    $("#update-password").show();
+			$("#update-bank-details").hide();
+			$('#profile-title').text('Update Password');
 		}
 
 		function updateDetails() {
@@ -155,14 +179,18 @@
 		    $('#action-button').text('Update Password');
 		    $("#update-details").show();
 		    $("#update-password").hide();
+			$("#update-bank-details").hide();
+			$('#profile-title').text('Update Detail');
 		}
 
 		function updateBankDetails(){
-			$('#action-button').attr('onClick', 'bankDetails()');
-		    $('#action-button').text('Update Bank Details');
+			console.log("clicked");
+			$('#action-button').attr('onClick', 'updateDetails()');
+		    $('#action-button').text('Update Details');
 		    $("#update-bank-details").show();
 		    $("#update-password").hide();
 		    $("#update-details").hide();
+			$('#profile-title').text('Update Bank Details');
 
 		}
 

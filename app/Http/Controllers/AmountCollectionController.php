@@ -66,8 +66,24 @@ class AmountCollectionController extends Controller
         $childNodes = User::children($user_id); //User::tree($user_id);
         
         $data = AmountCollection::where('user_id',$user_id)->orderBy('id','desc')->paginate(10);
+        // $preparPaymetList = $this->_preparePaymentList($data);
+        
 
         return view('user.user_dashboard',compact('users','totalColllection','today','yesterday','topDepositors','childNodes','data'));
+    }
+
+    protected function _preparePaymentList($data){
+        $paymentLists = [];
+        foreach($data as $list){
+            $paymentLists['id'] = $list->id;
+            $paymentLists['user_id'] = $list->user_id;
+            $paymentLists['date'] = $list->date;
+            $paymentLists['amount'] = $list->amount;
+            $paymentLists['payment_mode'] = $list->payment_mode;
+            $paymentLists['status'] = $list->status;
+            $paymentLists['submit_by'] = $list->submit_by;
+        }
+        // dd()
     }
 
     public function getUsers(Request $request)

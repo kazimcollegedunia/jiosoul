@@ -96,16 +96,23 @@
                         </tr>
                         </thead>
                         <tbody>
-                            @foreach ($data as $key => $user)
+                        @foreach ($data as $key => $user)
                             <tr>
                                 <td>{{ ++$key }}</td>
                                 <td>{{ 'JIO-DEP10'.$user->id }}</td>
                                 <td>{{ $user->amount }}</td>
                                 <td>{{ $user->payment_mode }}</td>
                                 <td>{{ $user->date }}</td>
-                                <td>{{ $user->status?'Approve':'Pending' }}</td>
-                            </tr>
-                                
+                                <td>
+                                    @if ($user->status == 1)
+                                        Approved
+                                    @elseif ($user->status == 2)
+                                        Rejected
+                                    @else
+                                        Pending
+                                    @endif
+                            </td>
+
                             @endforeach
                         </tbody>
                     </table>
@@ -115,27 +122,29 @@
                 </div>
 
             </div>
-            <div class="card-box mb-30">
-                <div class="pd-5 bg bg-light-blue text-center">
-                    <h4 class="text-white-heading h3">Ancestor Table</h4>
-                </div>
+            @role('super-admin')
+                <div class="card-box mb-30">
+                    <div class="pd-5 bg bg-light-blue text-center">
+                        <h4 class="text-white-heading h3">Ancestor Table</h4>
+                    </div>
 
-                <div class="col-lg-6 col-md-6 col-sm-6 m-1">
-                    <ul id="user-hierarchy" class="list-group">
-                        @if(!empty($childNodes))
-                            @foreach($childNodes as $user)
-                                @include('layout.recursive_node', ['user' => $user])
-                            @endforeach
-                        @endif
-                    </ul>
-                    <!-- <div class="col-lg-12 col-md-12 col-sm-12">
-                        <div class="sitemap">
-                            <h5 class="h5">Your Ancestor</h5>
-                            include('layout.recursive_node', ['nodes' => $childNodes])
-                        </div>
-                    </div> -->
+                    <div class="col-lg-6 col-md-6 col-sm-6 m-1">
+                        <ul id="user-hierarchy" class="list-group">
+                            @if(!empty($childNodes))
+                                @foreach($childNodes as $user)
+                                    @include('layout.recursive_node', ['user' => $user])
+                                @endforeach
+                            @endif
+                        </ul>
+                        <!-- <div class="col-lg-12 col-md-12 col-sm-12">
+                            <div class="sitemap">
+                                <h5 class="h5">Your Ancestor</h5>
+                                include('layout.recursive_node', ['nodes' => $childNodes])
+                            </div>
+                        </div> -->
+                    </div>
                 </div>
-            </div>
+            @endrole
         </div>
 
             

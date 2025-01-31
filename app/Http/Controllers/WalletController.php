@@ -109,10 +109,13 @@ class WalletController extends Controller
 
     public function viewPurchaseAmount($id){
         $userWalletHistory =  UserWalletHistory::walletAmountDetails($id);
-    
-        $payments['users'] = $userWalletHistory ? $userWalletHistory[0] : [];
-        $payments['fullDetails'] = $userWalletHistory ?? [];
-        $payments['totalDistributionAmount'] = $this->walletService->purchaseAmountDistribution($userWalletHistory);
+            $payments = [];
+        if(count($userWalletHistory) && !empty($userWalletHistory)){
+            $payments['users'] = $userWalletHistory ? $userWalletHistory[0] : [];
+            $payments['fullDetails'] = $userWalletHistory ?? [];
+            $payments['totalDistributionAmount'] = $this->walletService->purchaseAmountDistribution($userWalletHistory);
+        }
+        
         return view('admin_pages.wallet_purchase_amount',compact('payments'));
     }
 
@@ -123,7 +126,7 @@ class WalletController extends Controller
     }
 
     public function walletAllAmountUpdate($id,$status){
-        $userWalletHistory = UserWalletHistory::where('transaction_parent_id', $id)->update(['status' => $status]);
+        $this->walletService->updateParentTransactionId($id,$status);
 
         return redirect()->back()->withSuccess('updated successfull');
     }

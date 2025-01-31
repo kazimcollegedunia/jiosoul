@@ -173,7 +173,7 @@
 <div class="left-side-bar">
     <div class="brand-logo">
         <a href="/">
-            <h2>Jio-Soul-2</h2>
+            <h2>Jio-Soul</h2>
         </a>
         <div class="close-sidebar" data-toggle="left-sidebar-close">
             <i class="ion-close-round"></i>

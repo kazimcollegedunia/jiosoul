@@ -205,7 +205,7 @@ class WalletService
         if($row->status == UserWalletHistory::Wallet_STATUS['approve'] || !$row->status){
             $btn .= '<a href="'.route('update.purchase.amount', ['id' => $row->id, 'status' => UserWalletHistory::Wallet_STATUS['rejected']]) .'" class="btn btn-sm btn-danger btn-block" onclick="return confirm(`Are you sure you want to Reject pending payment?`)">Reject</a>';
             if(!$is_wallet){
-                $btn .='<a href="'.route('view.purchase.amount', ['id' => $row->id]) .'" class="btn btn-sm btn-success btn-block" onclick="return confirm(`Are you sure you want to Approve pending payment?`)">View</a>';
+                $btn .='<a href="'.route('view.purchase.amount', ['id' => $row->id]) .'" class="btn btn-sm btn-success btn-block">View</a>';
             }
             
         }
@@ -307,5 +307,13 @@ class WalletService
         }
         return $transfer_amount;
     }
+
+    public function updateParentTransactionId($id, $status){
+        UserWalletHistory::where(function ($query) use ($id) {
+            $query->where('transaction_parent_id', $id)
+                  ->orWhere('id', $id);
+        })->update(['status' => $status]);
+    }
+    
 }
 
