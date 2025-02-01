@@ -122,7 +122,6 @@
                 </div>
 
             </div>
-            @role('super-admin')
                 <div class="card-box mb-30">
                     <div class="pd-5 bg bg-light-blue text-center">
                         <h4 class="text-white-heading h3">Ancestor Table</h4>
@@ -144,7 +143,6 @@
                         </div> -->
                     </div>
                 </div>
-            @endrole
         </div>
 
             
