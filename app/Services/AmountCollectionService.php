@@ -84,4 +84,14 @@ class AmountCollectionService
 
         return $filter;
     }
+
+    public function resetUserAmount($amountsDataArr)
+    {
+        $resetBy = Auth::user()->id;
+        $reset_date = Carbon::now()->format('Y-m-d');
+        $returnValue = AmountCollection::whereIn('id', $amountsDataArr)
+        ->update(['reset_amount' => 1,'reset_by' => $resetBy,'reset_date' => $reset_date ]);
+        return true;
+    }
+
 }

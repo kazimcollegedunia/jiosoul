@@ -8,9 +8,17 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use App\Models\UserChild;
+use App\Models\AmountCollection;
+use App\Services\AmountCollectionService;
 
 class UserController extends Controller
 {
+    protected $amountService;
+
+    public function __construct(AmountCollectionService $amountService)
+    {
+        $this->amountService = $amountService;
+    }
     public function registerPage(){
         return view('auth.register');
     }
@@ -253,4 +261,25 @@ class UserController extends Controller
         $users = User::all();
         return view("user.profile",compact('users')); 
     }
+    
+    public function resetAmount(Request $request){
+        $user_id = $request->id;
+        $amountsDataArr = AmountCollection::where(
+            [
+                'user_id' => $user_id,
+                'reset_amount' => 0
+            ]
+            )->get();
+        return view('admin_pages.reset_amount',compact('amountsDataArr','user_id'));
+    }
+
+    public function resetAmountAction(Request $request){
+        $user_id = $request->id;
+        $amountsIds = AmountCollection::where('user_id',$user_id)->pluck('id');
+        $this->amountService->resetUserAmount($amountsIds);
+        return redirect()->back()->withSuccess("Amount Reset Successfully !!!");
+    }
 }
+
+
+

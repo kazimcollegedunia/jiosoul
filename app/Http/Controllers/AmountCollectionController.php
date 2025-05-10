@@ -33,7 +33,7 @@ class AmountCollectionController extends Controller
                         // ->limit(4)
                         // ->get();
                         // dd($topDepositors);
-        $amount = AmountCollection::get();
+        $amount = AmountCollection::where('reset_amount',false)->get();
         $totalColllection = $amount->sum('amount');
         $today = $amount->where('date',$date->format('Y-m-d'))->where('status',true)->sum('amount');
         $yesterday = $amount->where('date',$date->subDays(1)->format('Y-m-d'))->where('status',true)->sum('amount');
@@ -151,7 +151,7 @@ class AmountCollectionController extends Controller
 
     public function depositDatatable(Request $request){
         $logedinUser = Auth::user();
-        $data = AmountCollection::with('userDetails');
+        $data = AmountCollection::where('reset_amount',false)->with('userDetails');
 
         if($request->status !== "all"){
             $data->where('status',$request->status);

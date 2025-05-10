@@ -232,7 +232,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6 col-md-6 mb-20">
+                    <!-- <div class="col-lg-6 col-md-6 mb-20">
                         <div
                             class="card-box min-height-200px pd-20 mb-20"
                             data-bgcolor="#E6A4B4"
@@ -240,7 +240,7 @@
                             <div class="d-flex justify-content-between pb-20 text-white">
                                 <div class="icon h1 text-white">
                                     <i class="fa fa-calendar" aria-hidden="true"></i>
-                                    <!-- <i class="icon-copy fa fa-stethoscope" aria-hidden="true"></i> -->
+                                    <i class="icon-copy fa fa-stethoscope" aria-hidden="true"></i>
                                 </div>
                                 <div class="font-14 text-right">
                                     <div><i class="icon-copy ion-arrow-up-c"></i> 2.69%</div>
@@ -277,7 +277,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
 
         </div>

@@ -35,6 +35,8 @@ use App\Http\Controllers\WalletController;
             Route::get('edit-profile/{uid}', [UserController::class,'editProfile'])->name('edit.profile');
             Route::get('user-status/{type}/{uid}', [UserController::class,'userStatus'])->name('user.status');
             Route::post('change-password', [UserController::class,'changePasswordByadmin'])->name('user.change.password');
+            Route::get('reset-amount/{id}', [UserController::class,'resetAmount'])->name('user.reset.amount');
+            Route::get('reset-amount-action/{id}', [UserController::class,'resetAmountAction'])->name('user.reset.amount.action');
 
         });
 

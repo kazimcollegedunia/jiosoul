@@ -31,6 +31,7 @@
                 @endif
                 <div>
                     <div class="text text-right m-2">
+                        <a href="{{route('user.reset.amount',[$user->id])}}" class="btn btn-danger">Amount Reset</a>
                         <a href="javascript:void(0)" class="btn btn-success" id="top-button" onclick="showUserProfile('parent')">Assign Parent</a>
                     </div>
                     <div class="m-2">
