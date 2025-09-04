@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AmountCollectionController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\RoomController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,6 +16,12 @@ use App\Http\Controllers\WalletController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+    // For tetsing Strat
+    Route::get('/room', [RoomController::class, 'index'])->name('rooms.index');
+    Route::post('/book', [RoomController::class, 'book'])->name('rooms.book');
+    Route::post('/reset', [RoomController::class, 'reset'])->name('rooms.reset');
+    Route::post('/randomize', [RoomController::class, 'randomize'])->name('rooms.randomize');
+    // For tetsing End
 
     Route::get('/', [UserController::class,'registerPage'])->name('register.page');
     Route::post('/register', [UserController::class, 'register'])->name('register');
