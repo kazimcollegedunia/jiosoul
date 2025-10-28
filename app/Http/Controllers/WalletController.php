@@ -25,31 +25,86 @@ class WalletController extends Controller
         $wallet = $this->walletService::walletCalculations($user_id);
         return view('user.user_wallet',compact('wallet'));
     }
-    public function walletWthdrawal(Request $request){
-        $user_id =  Auth::user()->id;
+    // public function walletWthdrawal(Request $request){
+    //     $user_id =  Auth::user()->id;
 
+    //     $validated = $request->validate([
+    //         'amount' => 'required|integer|min:100',
+    //     ],[
+    //         'amount.min' => "Amount should be minmum 100 ₹"
+    //     ]);
+
+    //     $amount = $request->amount;
+    //     $is_avalibale_amount = $this->walletService::checkWalletBalance($amount,$user_id);
+    //     if(!$is_avalibale_amount){
+    //         return redirect()->back()->withError('The wallet balance should be at least '.$amount.' ₹');
+    //     }
+
+    //     $userWalletHistory = New UserWalletHistory;
+    //     $userWalletHistory->user_id =  $user_id;
+    //     $userWalletHistory->amount =  $amount;
+    //     $userWalletHistory->transaction_type =  UserWalletHistory::Wallet_TRANSATION['debit_request'];
+    //     $userWalletHistory->status =  UserWalletHistory::Wallet_STATUS['pending'];
+    //     $userWalletHistory->save();
+
+    //     return redirect()->back()->withSuccess('Request Sent Successfull Amount will credit on your AC');
+        
+    // }
+
+    public function walletWthdrawal(Request $request)
+    {
+        // dd($request->all());
+        // ✅ Check if admin is sending request or user
+        $loggedInUser = Auth::user();
+        $isAdmin = $loggedInUser->id === 1; // adjust field name as per your table
+
+        // ✅ Determine which user’s wallet to withdraw from
+        $user_id = $isAdmin && $request->has('user_id') 
+            ? $request->user_id   // admin can choose any user
+            : $loggedInUser->id;  // normal user
+
+        // ✅ Validation
         $validated = $request->validate([
             'amount' => 'required|integer|min:100',
-        ],[
-            'amount.min' => "Amount should be minmum 100 ₹"
+        ], [
+            'amount.min' => "Amount should be minimum 100 ₹"
         ]);
 
         $amount = $request->amount;
-        $is_avalibale_amount = $this->walletService::checkWalletBalance($amount,$user_id);
-        if(!$is_avalibale_amount){
-            return redirect()->back()->withError('The wallet balance should be at least '.$amount.' ₹');
+
+        // ✅ Check wallet balance
+        $isAvailable = $this->walletService::checkWalletBalance($amount, $user_id);
+        if (!$isAvailable) {
+            return redirect()->back()->withError('The wallet balance should be at least ' . $amount . ' ₹');
         }
 
-        $userWalletHistory = New UserWalletHistory;
-        $userWalletHistory->user_id =  $user_id;
-        $userWalletHistory->amount =  $amount;
-        $userWalletHistory->transaction_type =  UserWalletHistory::Wallet_TRANSATION['debit_request'];
-        $userWalletHistory->status =  UserWalletHistory::Wallet_STATUS['pending'];
-        $userWalletHistory->save();
+        // ✅ If Admin → directly approve and debit
+        if ($isAdmin) {
+            $walletTxn = new UserWalletHistory();
+            $walletTxn->user_id = $user_id;
+            $walletTxn->amount = $amount;
+            $walletTxn->transaction_type = UserWalletHistory::Wallet_TRANSATION['debit_request'];
+            $walletTxn->status = UserWalletHistory::Wallet_STATUS['pending'];
+            // $walletTxn->approved_by = $loggedInUser->id; // optional: who approved
+            $walletTxn->save();
 
-        return redirect()->back()->withSuccess('Request Sent Successfull Amount will credit on your AC');
-        
+            // ✅ Update user wallet balance instantly
+            // $this->walletService::deductWalletBalance($user_id, $amount);
+
+            return redirect()->back()->withSuccess('Amount successfully withdrawn from user wallet (status pending).');
+        }
+
+        // ✅ If Normal User → pending request (existing flow)
+        $walletTxn = new UserWalletHistory();
+        $walletTxn->user_id = $user_id;
+        $walletTxn->amount = $amount;
+        $walletTxn->transaction_type = UserWalletHistory::Wallet_TRANSATION['debit_request'];
+        $walletTxn->status = UserWalletHistory::Wallet_STATUS['pending'];
+        $walletTxn->save();
+
+        return redirect()->back()->withSuccess('Request sent successfully. Amount will be credited upon approval.');
     }
+
 
     public function addWalletAmount(){
         $user_id =  Auth::user()->id;
@@ -130,4 +185,25 @@ class WalletController extends Controller
 
         return redirect()->back()->withSuccess('updated successfull');
     }
+
+    public function directwalletWthdrawal($id = null)
+    {
+        $users = User::get();
+        $wallet = [];
+
+        if (!empty($id)) {
+            $wallet = $this->walletService::walletCalculations($id);
+
+            // Return JSON if it's an AJAX request
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'wallet' => $wallet
+                ]);
+            }
+        }
+
+        return view('user.direct_wallet', compact('users', 'wallet'));
+    }
+
 }

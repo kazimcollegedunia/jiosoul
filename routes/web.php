@@ -80,6 +80,7 @@ use App\Http\Controllers\RoomController;
             Route::get('all-amount-update/{id}/{status}', [WalletController::class,'walletAllAmountUpdate'])->name('wallet.all.amount.update');
             Route::get('amount-process', [WalletController::class,'walletAmountProcess'])->name('wallet.amount.process');
             Route::get('amount-process-datatable', [WalletController::class,'amountProcessDatatable'])->name('amount.process.datatable');
+            Route::get('direct-wthdrawal-wallet/{id?}', [WalletController::class,'directwalletWthdrawal'])->name('direct.wallet.wthdrawal');
         });
 
         Route::get('new-user', function(){

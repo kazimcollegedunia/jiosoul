@@ -21,7 +21,7 @@
                 </div>
                 <div class="pd-20">
                     <div class="text text-right">
-                        <!-- <a href="" class=" btn btn-info"> <i class="micon bi bi-wallet2"></i> Wallet Payment Process</a> -->
+                        <a href="{{route('direct.wallet.wthdrawal')}}" class=" btn btn-warning"> <i class="micon bi bi-wallet2"></i> Wthdrawal Wallet Amount</a>
                     </div>
                     <form>
                         <div class="row">
