@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use App\Models\AmountCollection;
 use DataTables;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class WalletService
 {
@@ -216,58 +217,128 @@ class WalletService
         return $btn;
     }
 
-    public static function amountDistribute($wallet)
-    {
-        $amount = $wallet->amount ?? 0;
-        $transaction_parent_id = $wallet->id;
-        // Fetch parents up the hierarchy
-        $userParents = User::parents($wallet->user_id);
+    // public static function amountDistribute($wallet)
+    // {
+    //     $amount = $wallet->amount ?? 0;
+    //     $transaction_parent_id = $wallet->id;
+    //     // Fetch parents up the hierarchy
+    //     $userParents = User::parents($wallet->user_id);
         
-        self::selfAmountDistribute($wallet->user_id,$amount,$transaction_parent_id);
+    //     self::selfAmountDistribute($wallet->user_id,$amount,$transaction_parent_id);
         
-        // Define the percentages for each level
-        $percentages = [0.009, 0.006, 0.003]; // First, second, third level percentages
+    //     // Define the percentages for each level
+    //     $percentages = [0.009, 0.006, 0.003]; // First, second, third level percentages
 
-        // Start distribution from the top-level parent
-        self::distributeAmount($amount, $userParents, $percentages, 0,$transaction_parent_id);
-    }
+    //     // Start distribution from the top-level parent
+    //     self::distributeAmount($amount, $userParents, $percentages, 0,$transaction_parent_id);
+    // }
 
-    private static function distributeAmount($amount, $parents, $percentages, $level,$transaction_parent_id)
-    {
-        if (empty($parents) || $level >= count($percentages)) {
-            return;
-        }
+    // private static function distributeAmount($amount, $parents, $percentages, $level,$transaction_parent_id)
+    // {
+    //     if (empty($parents) || $level >= count($percentages)) {
+    //         return;
+    //     }
 
-        foreach ($parents as $parent) {
-            $distributedAmount = $amount * $percentages[$level];
+    //     foreach ($parents as $parent) {
+    //         $distributedAmount = $amount * $percentages[$level];
             
-            // Update the parent's wallet
-            self::updateWallet($parent['user_id'], $distributedAmount,$transaction_parent_id);
+    //         // Update the parent's wallet
+    //         self::updateWallet($parent['user_id'], $distributedAmount,$transaction_parent_id);
             
-            // Recursively distribute to the next level
-            if (!empty($parent['parents'])) {
-                self::distributeAmount($amount, $parent['parents'], $percentages, $level + 1,$transaction_parent_id);
-            }
-        }
+    //         // Recursively distribute to the next level
+    //         if (!empty($parent['parents'])) {
+    //             self::distributeAmount($amount, $parent['parents'], $percentages, $level + 1,$transaction_parent_id);
+    //         }
+    //     }
+    // }
+
+    // public static function selfAmountDistribute($user_id,$amount,$transaction_parent_id){
+    //     $amount =  $amount * 0.03;
+    //     self::updateWallet($user_id,$amount,$transaction_parent_id);
+    // }
+
+    // private static function updateWallet($user_id, $amount,$transaction_parent_id)
+    // {
+    //     $wallet = new UserWalletHistory;
+    //     if ($wallet) {
+    //         $wallet->user_id = $user_id;
+    //         $wallet->transaction_type = UserWalletHistory::Wallet_TRANSATION['credited'];
+    //         $wallet->status = UserWalletHistory::Wallet_STATUS['pending'];
+    //         $wallet->transaction_parent_id = $transaction_parent_id;
+    //         $wallet->amount =  $amount;
+    //         $wallet->save();
+    //     }
+    // }
+
+public static function amountDistribute($wallet)
+{
+    $amount = (float) ($wallet->amount ?? 0);
+    $transaction_parent_id = $wallet->id;
+    $userId = $wallet->user_id;
+
+    // 1️⃣ Fetch up to 3-level parents in one query (recursive CTE)
+    $userParents = DB::select("
+        WITH RECURSIVE user_tree AS (
+            SELECT parent_id, child_id, 1 AS level
+            FROM user_children
+            WHERE child_id = ?
+            UNION ALL
+            SELECT uc.parent_id, ut.child_id, ut.level + 1
+            FROM user_children uc
+            INNER JOIN user_tree ut ON uc.child_id = ut.parent_id
+            WHERE ut.level < 3
+        )
+        SELECT DISTINCT parent_id, level FROM user_tree ORDER BY level ASC;
+    ", [$userId]);
+
+    // 2️⃣ Define commission percentages (self + 3 levels)
+    $percentages = [
+        'self' => 0.03,
+        1 => 0.009,
+        2 => 0.006,
+        3 => 0.003
+    ];
+
+    // 3️⃣ Prepare all inserts
+    $now = now();
+    $walletEntries = [];
+
+    // Self credit
+    $walletEntries[] = [
+        'user_id' => $userId,
+        'transaction_type' => UserWalletHistory::Wallet_TRANSATION['credited'],
+        'status' => UserWalletHistory::Wallet_STATUS['pending'],
+        'transaction_parent_id' => $transaction_parent_id,
+        'amount' => $amount * $percentages['self'],
+        'created_at' => $now,
+        'updated_at' => $now,
+    ];
+
+    // Parent credits (iterate directly, no recursion)
+    foreach ($userParents as $parent) {
+        $level = (int) $parent->level;
+        if (!isset($percentages[$level])) continue; // skip beyond 3 levels
+
+        $walletEntries[] = [
+            'user_id' => $parent->parent_id,
+            'transaction_type' => UserWalletHistory::Wallet_TRANSATION['credited'],
+            'status' => UserWalletHistory::Wallet_STATUS['pending'],
+            'transaction_parent_id' => $transaction_parent_id,
+            'amount' => $amount * $percentages[$level],
+            'created_at' => $now,
+            'updated_at' => $now,
+        ];
     }
 
-    public static function selfAmountDistribute($user_id,$amount,$transaction_parent_id){
-        $amount =  $amount * 0.03;
-        self::updateWallet($user_id,$amount,$transaction_parent_id);
-    }
-
-    private static function updateWallet($user_id, $amount,$transaction_parent_id)
-    {
-        $wallet = new UserWalletHistory;
-        if ($wallet) {
-            $wallet->user_id = $user_id;
-            $wallet->transaction_type = UserWalletHistory::Wallet_TRANSATION['credited'];
-            $wallet->status = UserWalletHistory::Wallet_STATUS['pending'];
-            $wallet->transaction_parent_id = $transaction_parent_id;
-            $wallet->amount =  $amount;
-            $wallet->save();
+    // 4️⃣ Single bulk insert in a transaction
+    DB::transaction(function() use ($walletEntries) {
+        if (!empty($walletEntries)) {
+            UserWalletHistory::insert($walletEntries);
         }
-    }
+    });
+}
+
+
 
     public static function amountDeduct($wallet)
     {

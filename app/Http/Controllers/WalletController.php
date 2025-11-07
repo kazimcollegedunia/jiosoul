@@ -157,6 +157,8 @@ class WalletController extends Controller
         if(empty($userWalletHistory->transaction_parent_id) && $status == UserWalletHistory::Wallet_STATUS['approve']){
             $this->walletService::amountDistribute($userWalletHistory);
         }
+        // dd($userWalletHistory);
+
         $userWalletHistory->status =  $status;
         $userWalletHistory->save();
         return redirect()->back()->withSuccess('updated successfull');

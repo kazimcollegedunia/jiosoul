@@ -101,44 +101,105 @@ class User extends Authenticatable
         }
     }
 
-    public static function children($parent_id)
-    {
-        $children = DB::table('user_children as uc')
-            ->select('u.name as user_name', 'u.employee_id as employee_id', 'u.id as user_id')
-            ->join('users as u', 'u.id', '=', 'uc.child_id')
-            ->where('uc.parent_id', $parent_id)
-            ->get()
-            ->toArray();
+    // public static function children($parent_id)
+    // {
+    //     $children = DB::table('user_children as uc')
+    //         ->select('u.name as user_name', 'u.employee_id as employee_id', 'u.id as user_id')
+    //         ->join('users as u', 'u.id', '=', 'uc.child_id')
+    //         ->where('uc.parent_id', $parent_id)
+    //         ->get()
+    //         ->toArray();
     
-        $childrenWithDescendants = self::getChildHierarchy($children);
-        return $childrenWithDescendants;
-    }
+    //     $childrenWithDescendants = self::getChildHierarchy($children);
+    //     return $childrenWithDescendants;
+    // }
     
-    public static function getChildHierarchy($children)
-    {
-        $childrenArray = [];
+    // public static function getChildHierarchy($children)
+    // {
+    //     $childrenArray = [];
         
-        foreach ($children as $child) {
-            $childId = $child->user_id;
+    //     foreach ($children as $child) {
+    //         $childId = $child->user_id;
 
-            $grandchildren = DB::table('user_children as uc')
-                ->select('u.name as user_name', 'u.employee_id as employee_id', 'u.id as user_id')
-                ->join('users as u', 'u.id', '=', 'uc.child_id')
-                ->where('uc.parent_id', $childId)
-                ->get()
-                ->toArray();
+    //         $grandchildren = DB::table('user_children as uc')
+    //             ->select('u.name as user_name', 'u.employee_id as employee_id', 'u.id as user_id')
+    //             ->join('users as u', 'u.id', '=', 'uc.child_id')
+    //             ->where('uc.parent_id', $childId)
+    //             ->get()
+    //             ->toArray();
 
-            $childHierarchy = self::getChildHierarchy($grandchildren);
+    //         $childHierarchy = self::getChildHierarchy($grandchildren);
             
-            $childrenArray[] = [
-                'user_name' => $child->user_name,
-                'employee_id' => $child->employee_id,
-                'user_id' => $child->user_id,
-                'children' => $childHierarchy
+    //         $childrenArray[] = [
+    //             'user_name' => $child->user_name,
+    //             'employee_id' => $child->employee_id,
+    //             'user_id' => $child->user_id,
+    //             'children' => $childHierarchy
+    //         ];
+    //     }
+    
+    //     return $childrenArray;
+    // }
+
+    // Nov 2025 Version of children to avoid recursion limit issues Fixed by using iterative approach
+   public static function children($parent_id)
+    {
+        // Fetch all data once
+        $allRelations = DB::table('user_children as uc')
+            ->select('u.name as user_name', 'u.employee_id as employee_id', 'u.id as user_id', 'uc.parent_id')
+            ->join('users as u', 'u.id', '=', 'uc.child_id')
+            ->get();
+
+        // Group by parent_id for quick lookup
+        $grouped = [];
+        foreach ($allRelations as $relation) {
+            $grouped[$relation->parent_id][] = [
+                'user_name'   => $relation->user_name,
+                'employee_id' => $relation->employee_id,
+                'user_id'     => $relation->user_id,
+                'children'    => []
             ];
         }
-    
-        return $childrenArray;
+
+        // Root children
+        $root = $grouped[$parent_id] ?? [];
+
+        // Use stack (iterative) to avoid recursion
+        $stack = [];
+        $stack[] = [
+            'parent_id' => $parent_id,
+            'children'  => &$root
+        ];
+
+        // Track visited IDs to prevent circular reference crashes
+        $visited = [];
+
+        while (!empty($stack)) {
+            $item = array_pop($stack);
+            $currentParentId = $item['parent_id'];
+            $currentChildren = &$item['children'];
+
+            // Prevent infinite loops if bad/circular data
+            if (isset($visited[$currentParentId])) {
+                continue;
+            }
+            $visited[$currentParentId] = true;
+
+            foreach ($currentChildren as $key => &$child) {
+                $childId = $child['user_id'];
+
+                if (isset($grouped[$childId])) {
+                    $child['children'] = $grouped[$childId];
+                    $stack[] = [
+                        'parent_id' => $childId,
+                        'children'  => &$child['children']
+                    ];
+                }
+            }
+            unset($child); // important: remove reference
+        }
+
+        return $root;
     }
 
     public static function parents($child_id)

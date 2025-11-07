@@ -63,7 +63,19 @@ class AmountCollectionController extends Controller
             $q->where('id',$user_id);
         })->sum('amount');
             
+
+
+        $start_time = microtime(true);
+
         $childNodes = User::children($user_id); //User::tree($user_id);
+
+        $end_time = microtime(true);
+
+        $execution_time = $end_time - $start_time;
+
+        echo "Script executed in " . $execution_time . " seconds.";
+        // die;
+        // $childNodes = User::children($user_id); //User::tree($user_id);
         
         $data = AmountCollection::where('user_id',$user_id)->orderBy('id','desc')->paginate(10);
         // $preparPaymetList = $this->_preparePaymentList($data);
