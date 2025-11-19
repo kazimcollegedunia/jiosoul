@@ -83,7 +83,10 @@ class WalletService
         $allTransation = [];
         $count = $type;
 
-        $walletData = UserWalletHistory::where('user_id', $user_id)->where('transaction_type',UserWalletHistory::Wallet_TRANSATION['purchase_amount'])->get();
+        $walletData = UserWalletHistory::where('user_id', $user_id)
+                        ->where('transaction_type',UserWalletHistory::Wallet_TRANSATION['purchase_amount'])
+                        ->orderBy('id','desc')
+                        ->get();
 
         if ($walletData->isNotEmpty()) {
             foreach ($walletData as $key => $wallet) {
