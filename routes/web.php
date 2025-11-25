@@ -81,6 +81,7 @@ use App\Http\Controllers\RoomController;
             Route::get('amount-process', [WalletController::class,'walletAmountProcess'])->name('wallet.amount.process');
             Route::get('amount-process-datatable', [WalletController::class,'amountProcessDatatable'])->name('amount.process.datatable');
             Route::get('direct-wthdrawal-wallet/{id?}', [WalletController::class,'directwalletWthdrawal'])->name('direct.wallet.wthdrawal');
+            Route::get('update-wallet-amount/{id}/{status}', [WalletController::class,'updateWalletAmount'])->name('update.wallet.amount');
         });
 
         Route::get('new-user', function(){

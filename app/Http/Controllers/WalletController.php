@@ -141,12 +141,14 @@ class WalletController extends Controller
 
     public function purchaseAmountList()
     {   
+        /// here....
         $status =  UserWalletHistory::Wallet_STATUS;
         $users = User::get();
         return view('admin_pages.purchase_amount',compact('status','users'));
     }
 
     public function purchaseAmountDatatable(Request $request){
+        /// here....
         $is_wallet = isset($request->is_wallet) ? $request->is_wallet :  false;
         $data = $this->walletService->datatableDataQuery($request);
        return  $this->walletService->datatableData($data,$is_wallet);
@@ -208,4 +210,15 @@ class WalletController extends Controller
         return view('user.direct_wallet', compact('users', 'wallet'));
     }
 
+    public function updateWalletAmount($id, $status)
+    {
+        $userWalletHistory = UserWalletHistory::find($id);
+        if ($userWalletHistory) {
+            $userWalletHistory->transaction_type = $status;
+            $userWalletHistory->status = $status;
+            $userWalletHistory->save();
+            return redirect()->back()->withSuccess('Wallet amount status updated successfully.');
+        }
+        return redirect()->back()->withError('Wallet amount not found.');
+    }
 }

@@ -17,7 +17,7 @@
             <!-- Default Basic Forms Start -->
             <div class="card-box mb-30">
                 <div class="pd-5 bg bg-light-blue text-center">
-                    <h4 class="text-white-heading h3">Payments List</h4>
+                    <h4 class="text-white-heading h3">Wallet List</h4>
                 </div>
                 <div class="pd-20">
                     <div class="text text-right">

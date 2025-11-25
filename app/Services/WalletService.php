@@ -15,66 +15,86 @@ class WalletService
 {
     public static function walletCalculations($user_id = null, $type = 0)
     {
-        $allTransation = [];
+        $users = [];
         $finalData = [];
-        $count = $type;
-    
+
+        // Fetch wallet data (filter only necessary)
         $walletData = UserWalletHistory::where('transaction_type', '!=', UserWalletHistory::Wallet_TRANSATION['purchase_amount'])
-        ->where('status', '!=', UserWalletHistory::Wallet_STATUS['rejected'])->get();
-    
-        if ($walletData->isNotEmpty()) {
-            foreach ($walletData as $key => $wallet) {
-                // Initialize user array values
-                if (!isset($user[$wallet->user_id])) {
-                    $user[$wallet->user_id] = [
-                        'credit' => 0,
-                        'creditPending' => 0,
-                        'debited' => 0,
-                        'debitReq' => 0
-                    ];
-                    $allTransation[$wallet->user_id] = [];
-                }
-    
-                $count++;
-                if ($count <= 20) {
-                    $allTransation[$wallet->user_id][$key] = [
-                        'id' => $wallet->id,
-                        'amount' => $wallet->amount,
-                        'transaction_type' => ucwords(str_replace('_', ' ', array_search($wallet->transaction_type, UserWalletHistory::Wallet_TRANSATION))),
-                        'status' => array_search($wallet->status, UserWalletHistory::Wallet_STATUS),
-                        'created_at' => Carbon::parse($wallet->created_at)->format('Y-m-d h:i a'),
-                    ];
-                }
-    
-                if ($wallet->transaction_type === UserWalletHistory::Wallet_TRANSATION['credited']) {
-                    $user[$wallet->user_id]['credit'] += $wallet->amount;
-                }
-                if ($wallet->transaction_type === UserWalletHistory::Wallet_TRANSATION['debited']) {
-                    $user[$wallet->user_id]['debited'] += $wallet->amount;
-                }
-                if ($wallet->transaction_type === UserWalletHistory::Wallet_TRANSATION['debit_request']) {
-                    $user[$wallet->user_id]['debitReq'] += $wallet->amount;
-                }
-                if ($wallet->transaction_type === UserWalletHistory::Wallet_TRANSATION['credited'] && $wallet->status === UserWalletHistory::Wallet_STATUS['pending']) {
-                    $user[$wallet->user_id]['creditPending'] += $wallet->amount;
-                }
-    
-                $user[$wallet->user_id]['finalCredit'] = $user[$wallet->user_id]['credit']  - ($user[$wallet->user_id]['debited'] + $user[$wallet->user_id]['debitReq'] + $user[$wallet->user_id]['creditPending']);
-    
-                rsort($allTransation[$wallet->user_id]);
-    
-                $finalData[$wallet->user_id] = [
-                    'alltransation' => $allTransation[$wallet->user_id],
-                    'created' => $user[$wallet->user_id]['finalCredit'],
-                    'debited' => $user[$wallet->user_id]['debited'],
-                    'debitReq' => $user[$wallet->user_id]['debitReq'],
-                    'pending' => $user[$wallet->user_id]['creditPending']
+            ->where('status', '!=', UserWalletHistory::Wallet_STATUS['rejected'])
+            ->when($user_id, function($q) use ($user_id) {
+                $q->where('user_id', $user_id);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($walletData->isEmpty()) {
+            return $user_id ? [] : [];
+        }
+
+        // Reverse mapping for type + status
+        $typeMap  = array_flip(UserWalletHistory::Wallet_TRANSATION);
+        $statusMap = array_flip(UserWalletHistory::Wallet_STATUS);
+
+        foreach ($walletData as $wallet) {
+
+            // Initialize user record
+            if (!isset($users[$wallet->user_id])) {
+                $users[$wallet->user_id] = [
+                    'credit'        => 0,
+                    'creditPending' => 0,
+                    'debited'       => 0,
+                    'debitReq'      => 0,
+                    'transactions'  => []
                 ];
             }
+
+            // Store transaction (limit 20 per user)
+            if (count($users[$wallet->user_id]['transactions']) < 20) {
+                $users[$wallet->user_id]['transactions'][] = [
+                    'id'               => $wallet->id,
+                    'amount'           => $wallet->amount,
+                    'transaction_type' => ucwords(str_replace('_', ' ', $typeMap[$wallet->transaction_type])),
+                    'status'           => $statusMap[$wallet->status],
+                    'created_at'       => Carbon::parse($wallet->created_at)->format('Y-m-d h:i a'),
+                ];
+            }
+
+            // Calculations
+            match ($wallet->transaction_type) {
+                UserWalletHistory::Wallet_TRANSATION['credited']       => $users[$wallet->user_id]['credit'] += $wallet->amount,
+                UserWalletHistory::Wallet_TRANSATION['debited']        => $users[$wallet->user_id]['debited'] += $wallet->amount,
+                UserWalletHistory::Wallet_TRANSATION['debit_request']  => $users[$wallet->user_id]['debitReq'] += $wallet->amount,
+                default => null
+            };
+
+            // Pending credited
+            if (
+                $wallet->transaction_type == UserWalletHistory::Wallet_TRANSATION['credited'] &&
+                $wallet->status == UserWalletHistory::Wallet_STATUS['pending']
+            ) {
+                $users[$wallet->user_id]['creditPending'] += $wallet->amount;
+            }
+
+            // Final available credit
+            $users[$wallet->user_id]['finalCredit'] =
+                $users[$wallet->user_id]['credit']
+                - ($users[$wallet->user_id]['debited']
+                + $users[$wallet->user_id]['debitReq']
+                + $users[$wallet->user_id]['creditPending']);
+
+            // Prepare final output
+            $finalData[$wallet->user_id] = [
+                'alltransation' => $users[$wallet->user_id]['transactions'],
+                'created'       => $users[$wallet->user_id]['finalCredit'],
+                'debited'       => $users[$wallet->user_id]['debited'],
+                'debitReq'      => $users[$wallet->user_id]['debitReq'],
+                'pending'       => $users[$wallet->user_id]['creditPending'],
+            ];
         }
-    
-        return $user_id !== null ? ($finalData[$user_id] ?? []) : $finalData;
+
+        return $user_id ? ($finalData[$user_id] ?? []) : $finalData;
     }
+
     
 
 
@@ -196,26 +216,107 @@ class WalletService
         return $dataTable;
     }
 
-
-    public static function datatableActionButton($row, $is_wallet = null){
+    public static function datatableActionButton($row, $is_wallet = null)
+    {
         $btn = '';
-        if($row->status == UserWalletHistory::Wallet_STATUS['rejected']){
-            $btn .='<a href="'.route('update.purchase.amount', ['id' => $row->id, 'status' =>  UserWalletHistory::Wallet_STATUS['approve']]) .'" class="btn btn-sm btn-success btn-block" onclick="return confirm(`Are you sure you want to Approve pending payment?`)">Approve</a>';
+
+        if ($row->status == UserWalletHistory::Wallet_STATUS['pending'] && $row->transaction_type != UserWalletHistory::Wallet_TRANSATION['debit_request']) {
+
+            $btn .= '<a href="'.route('update.purchase.amount', [
+                            'id' => $row->id, 
+                            'status' => UserWalletHistory::Wallet_STATUS['approve']
+                        ]).'" 
+                    class="btn btn-sm btn-success btn-block" 
+                    onclick="return confirm(`Are you sure you want to Approve pending payment?`)">
+                    Approve
+                    </a>';
         }
 
-        if($row->status == UserWalletHistory::Wallet_STATUS['approve'] || !$row->status){
-            $btn .= '<a href="'.route('update.purchase.amount', ['id' => $row->id, 'status' => UserWalletHistory::Wallet_STATUS['rejected']]) .'" class="btn btn-sm btn-danger btn-block" onclick="return confirm(`Are you sure you want to Reject pending payment?`)">Reject</a>';
-            if(!$is_wallet){
-                $btn .='<a href="'.route('view.purchase.amount', ['id' => $row->id]) .'" class="btn btn-sm btn-success btn-block">View</a>';
-            }
-            
+
+        if ($row->status == UserWalletHistory::Wallet_STATUS['rejected']) {
+
+            $btn .= '<a href="'.route('update.purchase.amount', [
+                            'id' => $row->id, 
+                            'status' => UserWalletHistory::Wallet_STATUS['approve']
+                        ]).'" 
+                    class="btn btn-sm btn-success btn-block" 
+                    onclick="return confirm(`Are you sure you want to Approve this payment?`)">
+                    Approve
+                    </a>';
         }
 
-        if($row->status == UserWalletHistory::Wallet_STATUS['pending']){
-            $btn .='<a href="'.route('update.purchase.amount', ['id' => $row->id, 'status' => UserWalletHistory::Wallet_STATUS['approve']]) .'" class="btn btn-sm btn-success btn-block" onclick="return confirm(`Are you sure you want to Approve pending payment?`)">Approve</a>';
+
+        if ($row->status == UserWalletHistory::Wallet_STATUS['approve']) {
+
+            // Only View button
+            if (!$is_wallet) {
+                $btn .= '<a href="'.route('view.purchase.amount', [
+                                'id' => $row->id
+                            ]).'" 
+                        class="btn btn-sm btn-primary btn-block">
+                        View
+                        </a>';
             }
+        }
+
+        if (!$row->status) {
+
+            // Reject only when NOT approved
+            $btn .= '<a href="'.route('update.purchase.amount', [
+                            'id' => $row->id, 
+                            'status' => UserWalletHistory::Wallet_STATUS['rejected']
+                        ]).'" 
+                    class="btn btn-sm btn-danger btn-block" 
+                    onclick="return confirm(`Are you sure you want to Reject this payment?`)">
+                    Reject
+                    </a>';
+
+            if (!$is_wallet) {
+                $btn .= '<a href="'.route('view.purchase.amount', [
+                                'id' => $row->id
+                            ]).'" 
+                        class="btn btn-sm btn-primary btn-block">
+                        View
+                        </a>';
+            }
+        }
+
+        if (!empty($is_wallet) && $row->transaction_type == UserWalletHistory::Wallet_TRANSATION['debit_request']) {
+
+            $btn .= '<a href="'.route('update.wallet.amount', [
+                            'id' => $row->id, 
+                            'status' => UserWalletHistory::Wallet_STATUS['approve']
+                        ]).'" 
+                    class="btn btn-sm btn-info btn-block" 
+                    onclick="return confirm(`Approve Wallet Amount?`)">
+                    Approve Wallet
+                    </a>';
+        }
+
         return $btn;
     }
+
+
+
+    // public static function datatableActionButton($row, $is_wallet = null){
+    //     $btn = '';
+    //     if($row->status == UserWalletHistory::Wallet_STATUS['rejected']){
+    //         $btn .='<a href="'.route('update.purchase.amount', ['id' => $row->id, 'status' =>  UserWalletHistory::Wallet_STATUS['approve']]) .'" class="btn btn-sm btn-success btn-block" onclick="return confirm(`Are you sure you want to Approve pending payment?`)">Approve</a>';
+    //     }
+
+    //     if($row->status == UserWalletHistory::Wallet_STATUS['approve'] || !$row->status){
+    //         $btn .= '<a href="'.route('update.purchase.amount', ['id' => $row->id, 'status' => UserWalletHistory::Wallet_STATUS['rejected']]) .'" class="btn btn-sm btn-danger btn-block" onclick="return confirm(`Are you sure you want to Reject pending payment?`)">Reject</a>';
+    //         if(!$is_wallet){
+    //             $btn .='<a href="'.route('view.purchase.amount', ['id' => $row->id]) .'" class="btn btn-sm btn-success btn-block">View</a>';
+    //         }
+            
+    //     }
+
+    //     if($row->status == UserWalletHistory::Wallet_STATUS['pending']){
+    //         $btn .='<a href="'.route('update.purchase.amount', ['id' => $row->id, 'status' => UserWalletHistory::Wallet_STATUS['approve']]) .'" class="btn btn-sm btn-success btn-block" onclick="return confirm(`Are you sure you want to Approve pending payment?`)">Approve</a>';
+    //         }
+    //     return $btn;
+    // }
 
     // public static function amountDistribute($wallet)
     // {
