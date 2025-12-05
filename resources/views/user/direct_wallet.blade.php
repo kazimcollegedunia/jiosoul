@@ -68,6 +68,18 @@
                         @if(Auth::user()->id === 1)
                             <div class="col-sm-12 col-md-3">
                                 <div class="form-group">
+                                    <label class="col-form-label">Transaction Type*</label>
+                                    <select name="transaction_type" id="transaction_type" class="form-control">
+                                        <option value="" disabled selected>Select transaction type</option>
+                                        <option value="credit">Recahge(add Money)</option>
+                                        <option value="debit">Debit</option>
+                                        
+                                    </select>
+                                    <span id="name_error" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-3">
+                                <div class="form-group">
                                     <label class="col-form-label">Select Depositor*</label>
                                     <select name="user_id" id="depositor_name" class="form-control">
                                         <option value="" disabled selected>Select Depositor</option>
@@ -97,7 +109,7 @@
                         </div> -->
                         <div class="col-sm-12 col-md-12">
                             <div class="form-group">
-                                <input type="submit" value="Withdraw" class="btn btn-success btn-block">
+                                <input type="submit" value="Submit" class="btn btn-success btn-block">
 
                             </div>
                         </div>

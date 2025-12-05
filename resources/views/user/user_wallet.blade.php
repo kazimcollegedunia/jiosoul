@@ -128,6 +128,7 @@
                 @endif
                 <form action="{{ route('wallet.wthdrawal') }}" method="post" enctype="multipart/form-data" id="candidate_profile_form">
                     @csrf
+                    <input type="hidden" name="transaction_type" value="debit">
                         <div class="col-sm-12 col-md-4">
                             <div class="form-group">
                                 <label class="col-form-label">Amount*</label>

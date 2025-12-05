@@ -53,48 +53,84 @@ class WalletController extends Controller
 
     public function walletWthdrawal(Request $request)
     {
-        // dd($request->all());
-        // ✅ Check if admin is sending request or user
+
         $loggedInUser = Auth::user();
-        $isAdmin = $loggedInUser->id === 1; // adjust field name as per your table
+        $isAdmin = $loggedInUser->id === 1;
 
-        // ✅ Determine which user’s wallet to withdraw from
+        // Determine target user
         $user_id = $isAdmin && $request->has('user_id') 
-            ? $request->user_id   // admin can choose any user
-            : $loggedInUser->id;  // normal user
+            ? $request->user_id
+            : $loggedInUser->id;
 
-        // ✅ Validation
-        $validated = $request->validate([
-            'amount' => 'required|integer|min:100',
-        ], [
+        // Validation
+       $rules = [
+            'transaction_type' => 'required|in:credit,debit',
+            'amount' => 'required|numeric'
+        ];
+
+        // If DEBIT → add min:100
+        if ($request->transaction_type === 'debit') {
+            $rules['amount'] .= '|min:100';
+        }
+
+        $validated = $request->validate($rules, [
             'amount.min' => "Amount should be minimum 100 ₹"
         ]);
 
         $amount = $request->amount;
+        $txnType = $request->transaction_type;  // NEW dynamic selection
 
-        // ✅ Check wallet balance
+        /**
+         *  ⭐ CASE 1 : CREDIT (ADD WALLET AMOUNT)
+         *  --------------------------------------
+         *  If admin/user selects "credit", then we simply 
+         *  credit the amount and stop.
+         */
+        if ($txnType === 'credit') {
+
+            $walletTxn = new UserWalletHistory();
+            $walletTxn->user_id = $user_id;
+            $walletTxn->amount = $amount;
+            $walletTxn->transaction_type = UserWalletHistory::Wallet_TRANSATION['credited'];
+            $walletTxn->status = UserWalletHistory::Wallet_STATUS['approve'];
+            $walletTxn->save();
+
+            // Immediately add to wallet balance
+            // $this->walletService::addWalletBalance($user_id, $amount);
+
+            return redirect()->back()->withSuccess('Amount credited successfully to the wallet.');
+        }
+
+        /**
+         *  ⭐ CASE 2 : DEBIT (Your Existing Logic)
+         *  ---------------------------------------
+         *  Nothing changed here — your full original debit 
+         *  process is exactly same as before.
+         */
+
+        // Check wallet balance before debit
         $isAvailable = $this->walletService::checkWalletBalance($amount, $user_id);
         if (!$isAvailable) {
             return redirect()->back()->withError('The wallet balance should be at least ' . $amount . ' ₹');
         }
 
-        // ✅ If Admin → directly approve and debit
+        // Admin → Debit instantly with pending status
         if ($isAdmin) {
+
             $walletTxn = new UserWalletHistory();
             $walletTxn->user_id = $user_id;
             $walletTxn->amount = $amount;
             $walletTxn->transaction_type = UserWalletHistory::Wallet_TRANSATION['debit_request'];
             $walletTxn->status = UserWalletHistory::Wallet_STATUS['pending'];
-            // $walletTxn->approved_by = $loggedInUser->id; // optional: who approved
             $walletTxn->save();
 
-            // ✅ Update user wallet balance instantly
+            // debit can be instantly updated if needed:
             // $this->walletService::deductWalletBalance($user_id, $amount);
 
             return redirect()->back()->withSuccess('Amount successfully withdrawn from user wallet (status pending).');
         }
 
-        // ✅ If Normal User → pending request (existing flow)
+        // Normal user → pending withdrawal request
         $walletTxn = new UserWalletHistory();
         $walletTxn->user_id = $user_id;
         $walletTxn->amount = $amount;
@@ -102,7 +138,7 @@ class WalletController extends Controller
         $walletTxn->status = UserWalletHistory::Wallet_STATUS['pending'];
         $walletTxn->save();
 
-        return redirect()->back()->withSuccess('Request sent successfully. Amount will be credited upon approval.');
+        return redirect()->back()->withSuccess('Request sent successfully. Amount will be debited after approval.');
     }
 
 
